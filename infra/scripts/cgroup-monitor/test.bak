@@ -1,0 +1,38 @@
+Check JSON output is valid and has all required fields (Bash)
+    # Run for 3 seconds, capture output, validate JSON + fields
+timeout 3 python3 monitor.py 2>&1 | while IFS= read -r line; do
+  python3 -c "
+import json, sys
+d = json.loads('$line')
+required = ['timestamp','level','pid','name','rss_mb','cgroup_path','namespace','alert']
+missing = [k for k in required if k not in d]
+if missing:
+    print('MISSING FIELDS:', missing); sys.exit(1)
+print('OK:', d['name'], d['rss_mb'], 'MB', 'ALERT' if d['alert'] else '')
+"
+done
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Check cgroup path is being read correctly Bash
+# Your own shell's cgroup path:
+cat /proc/$$/cgroup
+
+# Expected output (cgroups v2 on modern Linux):
+# 0::/user.slice/user-1000.slice/session-3.scope
+
+# Run inside a Docker container — should show docker path:
+docker run --rm python:3.11-slim test -e /.dockerenv && echo "Running in Docker"
+# Expected: Running in Docker
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Verify iptables rules applied correctly Bash
+# List INPUT chain with line numbers and packet counts
+iptables -L INPUT -n --line-numbers -v
+
+# Test: port 3000 should only accept from API subnet
+# (run from outside API_CIDR — should time out)
+nc -zv -w3 <server-ip> 3000   # should FAIL from public IP
+
+# Test: port 80 should be reachable from anywhere
+nc -zv -w3 <server-ip> 80     # should SUCCEED
