@@ -3,13 +3,17 @@
 Week 1 mini project: cgroup-aware process monitor.
 Emits structured JSON logs — schema used by Splunk (W25) and OTel (W27).
 """
+import errno
 import json, time, logging, sys, os
+from signal import SIGPIPE, SIG_DFL, signal
 from datetime import datetime, timezone
 from cgroup_reader import get_processes_with_cgroups
+
 
 THRESHOLD_MB   = int(os.getenv("MONITOR_THRESHOLD_MB", 400))
 INTERVAL_SEC   = int(os.getenv("MONITOR_INTERVAL_SEC",  5))
 LOG_FILE       = os.getenv("MONITOR_LOG_FILE", "/var/log/cgroup-monitor.log")
+
 
 # ── Structured JSON formatter ──────────────────────────────
 class JSONFormatter(logging.Formatter):
@@ -25,6 +29,7 @@ class JSONFormatter(logging.Formatter):
             log.update(record.extra)
         return json.dumps(log)
 
+
 def setup_logger():
     logger = logging.getLogger("cgroup-monitor")
     logger.setLevel(logging.DEBUG)
@@ -38,6 +43,7 @@ def setup_logger():
     except PermissionError:
         logger.warning("Cannot write to %s — stdout only", LOG_FILE)
     return logger
+
 
 def emit(logger, proc):
     """Emit one structured log event per process."""
@@ -59,6 +65,7 @@ def emit(logger, proc):
     }
     logger.handle(record)
 
+
 def main():
     logger = setup_logger()
     logger.info(f"Starting — threshold={THRESHOLD_MB}MB interval={INTERVAL_SEC}s")
@@ -67,5 +74,20 @@ def main():
             emit(logger, proc)
         time.sleep(INTERVAL_SEC)
 
+
 if __name__ == "__main__":
-    main()
+    signal(SIGPIPE, SIG_DFL)
+    try:
+        main()
+    except BrokenPipeError:
+        try:
+            sys.stdout.close()
+        finally:
+            sys.exit(0)
+    except OSError as e:
+        if e.errno == errno.EPIPE:
+            try:
+                sys.stdout.close()
+            finally:
+                sys.exit(0)
+        raise
