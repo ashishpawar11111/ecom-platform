@@ -1,5 +1,5 @@
 Check JSON output is valid and has all required fields (Bash)
-    # Run for 3 seconds, capture output, validate JSON + fields
+# Run for 3 seconds, capture output, validate JSON + fields
 timeout 3 python3 monitor.py 2>&1 | while IFS= read -r line; do
   python3 -c "
 import json, sys
