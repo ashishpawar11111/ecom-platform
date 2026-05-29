@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# .githooks/pre-commit
+# Lightweight checks before commit is created.
+# Heavy checks (tests, lint) run in CI — not here.
+set -euo pipefail
+ERRORS=0
+
+# 1. Block .env files from being committed
+if git diff --cached --name-only | grep -qE '^\.env$|/\.env$'; then
+  echo "  ERROR: .env file is staged. Add to .gitignore and run: git rm --cached .env"
+  ERRORS=$((ERRORS + 1))
+fi
+
+# 2. Block Terraform state files
+if git diff --cached --name-only | grep -qE '\.tfstate'; then
+  echo "  ERROR: .tfstate file staged — state must never be committed."
+  ERRORS=$((ERRORS + 1))
+fi
+
+# 3. Block files with merge conflict markers
+while IFS= read -r file; do
+  if [[ -f "$file" ]] && grep -qE '^(<<<<<<<|=======|>>>>>>>)' "$file"; then
+    echo "  ERROR: conflict markers found in $file"
+    ERRORS=$((ERRORS + 1))
+  fi
+done < <(git diff --cached --name-only)
+
+# 4. Warn on large files (>500KB) — binary blobs belong in S3/LFS
+while IFS= read -r file; do
+  if [[ -f "$file" ]]; then
+    size=$(wc -c < "$file")
+    if [[ $size -gt 512000 ]]; then
+      echo "  WARN: large file staged: $file (${size} bytes) — consider Git LFS"
+    fi
+  fi
+done < <(git diff --cached --name-only)
+
+if [[ $ERRORS -gt 0 ]]; then
+  echo "  $ERRORS error(s) found. Commit aborted."
+  exit 1
+fi
+
+exit 0
