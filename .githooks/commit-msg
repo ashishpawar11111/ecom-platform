@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# .githooks/commit-msg
+# Enforces Conventional Commits format on every commit.
+# Copied to .git/hooks/commit-msg by bootstrap-repo.sh
+
+COMMIT_MSG_FILE="$1"
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Skip merge commits and fixup commits
+if echo "$COMMIT_MSG" | grep -qE '^(Merge|fixup!|squash!)'; then
+  exit 0
+fi
+
+# Conventional Commits regex
+# type(scope): description
+# scope is optional; description must be >=10 chars
+PATTERN='^(feat|fix|chore|docs|ci|refactor|test|infra|k8s|perf|revert)(\([a-z0-9/_-]+\))?: .{10,}$'
+
+if ! echo "$COMMIT_MSG" | grep -qE "$PATTERN"; then
+  echo ""
+  echo "  ERROR: commit message does not follow Conventional Commits."
+  echo "  Format:  type(scope): description (min 10 chars)"
+  echo "  Types:   feat fix chore docs ci refactor test infra k8s perf revert"
+  echo "  Example: feat(api): add POST /api/orders endpoint"
+  echo "  Example: infra(vpc): add private subnets for eu-west-2b"
+  echo "  Your msg: $COMMIT_MSG"
+  echo ""
+  exit 1
+fi
+
+# Warn if GPG signing is not configured (not a hard fail)
+GPG_SIGN=$(git config --get commit.gpgsign 2>/dev/null || echo "false")
+if [[ "$GPG_SIGN" != "true" ]]; then
+  echo "  WARN: GPG signing not enabled. Run: git config --global commit.gpgsign true"
+fi
+
+exit 0
