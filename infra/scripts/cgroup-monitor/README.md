@@ -11,7 +11,20 @@ This README documents the setup, validation steps, and JSON schema contract for 
 
 2. Install the only dependency, then freeze it:
    ```bash
+   # Update package index
+   sudo apt update
+
+   # Install pip for Python 3
+   sudo apt install -y python3-pip
+
+   # Verify pip3 installation
+   pip3 --version
+
+   # Install psutil
    pip3 install psutil
+   If you are using a newer Ubuntu release on EC2 (22.04/24.04), you may hit the externally-managed-environment error. In that case use:
+
+   pip3 install --break-system-packages psutil
    echo "psutil==5.9.6" > requirements.txt
    ```
 
@@ -37,7 +50,23 @@ This README documents the setup, validation steps, and JSON schema contract for 
 
 6. Run the iptables script only inside a VM or Docker container, never directly on a laptop:
    ```bash
-   docker run --rm --privileged ubuntu:22.04 bash -c "apt-get install -y iptables && bash /scripts/iptables_setup.sh"
+   # 1. Pull the image
+   docker pull ubuntu:22.04
+
+   # 2. Run container with the script mounted (replace /path/to with your actual path)
+   docker run --rm --privileged -it -v /path/to:/scripts:ro ubuntu:22.04 bash
+
+   # 3. Inside the container, update apt
+   apt-get update
+
+   # 4. Install iptables
+   apt-get install -y iptables
+
+   # 5. Run your script
+   bash /scripts/iptables_setup.sh
+
+   # 6. Exit the container
+   exit
    ```
 
 7. Verify that the JSON output matches the agreed contract:
