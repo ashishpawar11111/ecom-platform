@@ -1,0 +1,14 @@
+node_modules
+__tests__
+__mocks__
+coverage
+.env
+.env.*
+!.env.example
+npm-debug.log*
+jest.config.js
+.eslintrc.json
+*.test.js
+.git
+.gitignore
+README.md

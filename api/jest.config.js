@@ -1,18 +1,27 @@
+'use strict';
 module.exports = {
+  rootDir:         '.',
+  roots:           ['<rootDir>'],
   testEnvironment: 'node',
-  testMatch: ['**/__tests__/**/*.test.js'],
-  collectCoverageFrom: ['src/**/*.js'],
+  testMatch:       ['**/__tests__/**/*.test.js'],
+  // Exclude db.js from coverage — it needs a real Postgres connection
+  collectCoverageFrom: [
+    'src/**/*.js',
+    '!src/db.js',
+  ],
+  moduleNameMapper: {
+    '^../db$': '<rootDir>/__mocks__/db.js',
+    '^./db$':  '<rootDir>/__mocks__/db.js',
+  },
+  setupFiles: ['<rootDir>/jest.setup.js'],
   coverageThreshold: {
     global: {
-      lines:      75,
-      functions:  75,
-      branches:   60,
-      statements: 75
+      lines:      80,
+      functions:  80,
+      branches:   70,
+      statements: 80,
     }
   },
   coverageReporters: ['text', 'lcov'],
-  // mock pg so tests don't need a real database
-  moduleNameMapper: {
-    '^../db$': '<rootDir>/__mocks__/db.js'
-  }
+  verbose: true,
 };
