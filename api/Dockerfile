@@ -1,25 +1,28 @@
-# ── Stage 1: install production deps ──────────────────────────────────────────
-# Separate stage so npm ci is cached until package.json changes.
-FROM node:20-alpine AS deps
+# ── Stage 1: Build ──
+FROM node:20-alpine AS builder
+
 WORKDIR /app
+
 COPY package*.json ./
-RUN npm ci --only=production --ignore-scripts
+RUN npm ci --omit=dev && npm cache clean --force
 
-# ── Stage 2: production runner ────────────────────────────────────────────────
-FROM node:20-alpine AS runner
+COPY src/ ./src/
+
+# ── Stage 2: Runtime ──
+FROM node:20-alpine
+
+RUN apk --no-cache add curl \
+ && addgroup -S appgroup \
+ && adduser -S appuser -G appgroup
+
 WORKDIR /app
 
-# Non-root user — never run as root in production
-RUN addgroup -S ecom && adduser -S ecom -G ecom
-USER ecom
+COPY --from=builder --chown=appuser:appgroup /app ./
 
-COPY --from=deps --chown=ecom:ecom /app/node_modules ./node_modules
-COPY --chown=ecom:ecom src/ ./src/
-
-ENV NODE_ENV=production
+USER appuser
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -qO- http://localhost:3000/health/db || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
 
 CMD ["node", "src/index.js"]

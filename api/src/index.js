@@ -1,62 +1,50 @@
-'use strict';
-require('dotenv').config();
-const express   = require('express');
-const pinoHttp  = require('pino-http');
-const { pool }  = require('./db');
-const products  = require('./routes/products');
-const orders    = require('./routes/orders');
+const express = require('express');
+const cors = require('cors');
+const { pool, initDB } = require('./db');
+const productRoutes = require('./routes/products');
+const orderRoutes = require('./routes/orders');
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
-// Structured JSON logging — every request logged, Splunk-ready (Phase 5)
-app.use(pinoHttp({
-  transport: process.env.NODE_ENV !== 'production'
-    ? { target: 'pino-pretty' }
-    : undefined
-}));
-
+app.use(cors());
 app.use(express.json());
 
-// ── Health endpoints ──────────────────────────────────────────────────────────
-// /health      — liveness probe  (is the process alive?)
-// /health/db   — readiness probe (can we serve traffic? tests real DB conn)
-app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'ok', uptime: process.uptime() });
+// Health check endpoints
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime() });
 });
 
-app.get('/health/db', async (_req, res) => {
+app.get('/health/db', async (req, res) => {
   try {
-    await pool.query('SELECT 1');
-    res.status(200).json({ status: 'ok', db: 'connected' });
+    const result = await pool.query('SELECT NOW()');
+    res.json({ status: 'ok', db: result.rows[0].now });
   } catch (err) {
-    // Return 503 so K8s readiness probe removes pod from endpoints
-    res.status(503).json({ status: 'error', db: err.message });
+    res.status(503).json({ status: 'error', message: err.message });
   }
 });
 
-// ── Routes ────────────────────────────────────────────────────────────────────
-app.use('/api/products', products);
-app.use('/api/orders',   orders);
+// Routes
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
 
-// ── 404 handler ───────────────────────────────────────────────────────────────
-app.use((_req, res) => {
-  res.status(404).json({ error: 'Not found' });
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down gracefully...');
+  await pool.end();
+  process.exit(0);
 });
 
-// ── Global error handler ──────────────────────────────────────────────────────
-// eslint-disable-next-line no-unused-vars
-app.use((err, _req, res, _next) => {
-  console.error(err);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
-const PORT = process.env.PORT || 3000;
-
-// Only call listen when running directly — not when required by tests
-if (require.main === module) {
+async function start() {
+  await initDB();
   app.listen(PORT, () => {
-    console.log(`ecom-api listening on port ${PORT}`);
+    console.log(`API server running on port ${PORT}`);
   });
 }
+
+start().catch(err => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
+});
 
 module.exports = app;

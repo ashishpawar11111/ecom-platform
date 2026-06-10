@@ -1,0 +1,9 @@
+- name: Configure ecommerce platform hosts
+  hosts: all
+  become: true
+  roles:
+    - os-hardening
+    - users-and-keys
+    - rds-config
+    - log-shipper
+    - k8s-node-prep

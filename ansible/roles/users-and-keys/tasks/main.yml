@@ -1,0 +1,4 @@
+- name: Ensure deploy user exists
+  ansible.builtin.user:
+    name: deploy
+    shell: /bin/bash

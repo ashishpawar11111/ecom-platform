@@ -1,0 +1,9 @@
+- name: Disable swap
+  command: swapoff -a
+  changed_when: false
+
+- name: Apply restrictive sysctl baseline
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present

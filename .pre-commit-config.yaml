@@ -1,0 +1,43 @@
+"tok-comment"># .pre-commit-config.yaml — Git hooks (Week 2)
+"tok-comment"># Install: pip install pre-commit && pre-commit install
+repos:
+  "tok-comment"># Conventional Commits enforcement
+  - repo: https:"tok-comment">//github.com/compilerla/conventional-pre-commit
+    rev: v3.1.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: [feat, fix, docs, style, refactor, perf, test, ci, chore, revert]
+ 
+  "tok-comment"># General code quality
+  - repo: https:"tok-comment">//github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: no-commit-to-branch
+        args: ['--branch', 'main']
+ 
+  "tok-comment"># Secrets detection
+  - repo: https:"tok-comment">//github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+ 
+  "tok-comment"># Terraform formatting
+  - repo: https:"tok-comment">//github.com/antonbabenko/pre-commit-terraform
+    rev: v1.86.0
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_validate
+ 
+  "tok-comment"># Dockerfile linting
+  - repo: https:"tok-comment">//github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint

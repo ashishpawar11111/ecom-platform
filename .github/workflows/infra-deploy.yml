@@ -1,0 +1,11 @@
+name: infra-deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "terraform apply, export outputs, then run ansible"

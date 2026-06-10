@@ -1,0 +1,5 @@
+- name: Configure rsyslog forwarding
+  ansible.builtin.copy:
+    dest: /etc/rsyslog.d/90-splunk.conf
+    content: "*.* @@{{ splunk_hec_host | default('splunk') }}:514"
+    mode: "0644"

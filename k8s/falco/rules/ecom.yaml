@@ -1,0 +1,5 @@
+- rule: Unexpected outbound connection
+  desc: Detect unexpected outbound traffic from ecommerce workloads
+  condition: outbound and container.image.repository contains "ecom"
+  output: Unexpected outbound connection from ecom container
+  priority: WARNING
