@@ -537,7 +537,13 @@
           ...options,
         });
         const text = await res.text();
-        const data = text ? JSON.parse(text) : null;
+        let data = null;
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch (error) {
+          const target = endpoint(path);
+          throw new Error(`Expected JSON from ${target}, but got HTML/text. Check the API base and nginx /api proxy.`);
+        }
         if (!res.ok) {
           throw new Error((data && data.error) || `Request failed with ${res.status}`);
         }
