@@ -5,9 +5,14 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/products": "http://api:3000",
-      "/orders": "http://api:3000",
-      "/healthz": "http://api:3000"
+      "/api": {
+        target: process.env.VITE_API_PROXY_TARGET || "http://api:3000",
+        changeOrigin: true,
+      },
+      "/health": {
+        target: process.env.VITE_API_PROXY_TARGET || "http://api:3000",
+        changeOrigin: true,
+      },
     }
   }
 });
