@@ -486,7 +486,7 @@
 
     <script>
       const state = {
-        apiBase: localStorage.getItem("apiBase") || "/api",
+        apiBase: normalizeApiBase(localStorage.getItem("apiBase") || "/api"),
         products: [],
         cart: JSON.parse(localStorage.getItem("cart") || "[]"),
       };
@@ -527,8 +527,16 @@
         els.status.className = "status";
       }
 
+      function normalizeApiBase(value) {
+        const trimmed = String(value || "").trim();
+        if (!trimmed || trimmed === "/" || trimmed === "/products" || trimmed === "/orders") {
+          return "/api";
+        }
+        return trimmed.replace(/\/(products|orders|products\/order)\/?$/, "/api");
+      }
+
       function endpoint(path) {
-        return `${state.apiBase.replace(/\/$/, "")}${path}`;
+        return `${normalizeApiBase(state.apiBase).replace(/\/$/, "")}${path}`;
       }
 
       async function request(path, options = {}) {
@@ -727,7 +735,8 @@
 
       els.apiForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        state.apiBase = els.apiBase.value.trim() || "/api";
+        state.apiBase = normalizeApiBase(els.apiBase.value);
+        els.apiBase.value = state.apiBase;
         localStorage.setItem("apiBase", state.apiBase);
         try {
           await loadProducts();
