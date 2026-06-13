@@ -1,2 +1,750 @@
-<div id="root"></div>
-<script type="module" src="/src/App.jsx"></script>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E-Com Store</title>
+    <style>
+      :root {
+        color: #182028;
+        background: #f4f6f8;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.5;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      button {
+        border: 0;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 700;
+        transition: transform 120ms ease, background 120ms ease, opacity 120ms ease;
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+
+      .app-header {
+        background: #101820;
+        color: #ffffff;
+        border-bottom: 4px solid #1f8a70;
+      }
+
+      .header-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 18px 24px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 180px;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        border-radius: 8px;
+        background: #1f8a70;
+        color: #ffffff;
+        font-weight: 900;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 1.2rem;
+        letter-spacing: 0;
+      }
+
+      .api-panel {
+        display: grid;
+        grid-template-columns: auto minmax(220px, 380px) auto;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .api-panel label {
+        color: #cfd8dc;
+        font-size: 0.88rem;
+        font-weight: 700;
+      }
+
+      .api-panel input,
+      .toolbar input,
+      .toolbar select,
+      .quantity-input {
+        min-height: 38px;
+        border: 1px solid #cbd5dc;
+        border-radius: 6px;
+        background: #ffffff;
+        color: #182028;
+        padding: 8px 10px;
+      }
+
+      .api-panel button,
+      .primary {
+        min-height: 38px;
+        background: #1f8a70;
+        color: #ffffff;
+        padding: 8px 14px;
+      }
+
+      main {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 28px 24px 48px;
+      }
+
+      .status {
+        display: none;
+        margin-bottom: 18px;
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-weight: 700;
+      }
+
+      .status.show {
+        display: block;
+      }
+
+      .status.ok {
+        background: #e7f6ef;
+        color: #14533f;
+      }
+
+      .status.error {
+        background: #fdeceb;
+        color: #8b1e16;
+      }
+
+      .status.info {
+        background: #eaf2fb;
+        color: #1f4f7a;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+
+      .toolbar h2,
+      .orders h2,
+      .cart h2 {
+        margin: 0;
+        font-size: 1.45rem;
+      }
+
+      .toolbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .secondary {
+        min-height: 38px;
+        background: #e3e8ed;
+        color: #182028;
+        padding: 8px 14px;
+      }
+
+      .danger {
+        min-height: 34px;
+        background: #f2d2cf;
+        color: #7a1f19;
+        padding: 7px 11px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 22px;
+        align-items: start;
+      }
+
+      .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        gap: 16px;
+      }
+
+      .product-card,
+      .cart,
+      .orders {
+        background: #ffffff;
+        border: 1px solid #d9e0e6;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(16, 24, 32, 0.06);
+      }
+
+      .product-card {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        min-height: 220px;
+        overflow: hidden;
+      }
+
+      .product-art {
+        display: grid;
+        min-height: 92px;
+        place-items: center;
+        background:
+          linear-gradient(135deg, rgba(31, 138, 112, 0.12), rgba(240, 185, 64, 0.16)),
+          #f8fafb;
+      }
+
+      .product-art svg {
+        width: 72px;
+        height: 72px;
+      }
+
+      .product-body {
+        padding: 15px;
+      }
+
+      .product-name {
+        margin: 0 0 6px;
+        font-size: 1.02rem;
+      }
+
+      .product-meta {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        color: #52616d;
+        font-size: 0.92rem;
+      }
+
+      .price {
+        color: #0f614e;
+        font-size: 1.3rem;
+        font-weight: 900;
+      }
+
+      .product-actions {
+        display: grid;
+        grid-template-columns: 74px 1fr;
+        gap: 10px;
+        padding: 0 15px 15px;
+      }
+
+      .quantity-input {
+        width: 100%;
+      }
+
+      .cart,
+      .orders {
+        padding: 18px;
+      }
+
+      .cart {
+        position: sticky;
+        top: 18px;
+      }
+
+      .cart-list {
+        display: grid;
+        gap: 10px;
+        margin: 16px 0;
+      }
+
+      .cart-item {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        align-items: start;
+        border-bottom: 1px solid #e6ebef;
+        padding-bottom: 10px;
+      }
+
+      .cart-item:last-child {
+        border-bottom: 0;
+      }
+
+      .cart-item strong,
+      .order-product {
+        display: block;
+      }
+
+      .muted {
+        color: #667681;
+        font-size: 0.9rem;
+      }
+
+      .cart-total {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border-top: 2px solid #e6ebef;
+        padding-top: 14px;
+        font-size: 1.05rem;
+        font-weight: 900;
+      }
+
+      .cart-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .orders {
+        margin-top: 24px;
+      }
+
+      .orders-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid #e6ebef;
+        padding: 10px 8px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: #52616d;
+        font-size: 0.82rem;
+        text-transform: uppercase;
+      }
+
+      .pill {
+        display: inline-block;
+        border-radius: 999px;
+        background: #e7f6ef;
+        color: #14533f;
+        padding: 3px 9px;
+        font-size: 0.82rem;
+        font-weight: 800;
+      }
+
+      .empty {
+        border: 1px dashed #bfccd5;
+        border-radius: 8px;
+        color: #667681;
+        padding: 18px;
+        text-align: center;
+      }
+
+      @media (max-width: 860px) {
+        .header-inner,
+        .toolbar,
+        .orders-head {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .api-panel {
+          grid-template-columns: 1fr;
+          width: 100%;
+        }
+
+        .toolbar-actions {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .cart {
+          position: static;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">EC</div>
+          <h1>E-Com Store</h1>
+        </div>
+        <form class="api-panel" id="api-form">
+          <label for="api-base">API base</label>
+          <input id="api-base" name="api-base" value="/api" autocomplete="off" />
+          <button type="submit">Connect</button>
+        </form>
+      </div>
+    </header>
+
+    <main>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+
+      <section class="toolbar" aria-labelledby="products-title">
+        <h2 id="products-title">Products</h2>
+        <div class="toolbar-actions">
+          <input id="search" type="search" placeholder="Search products" />
+          <button class="secondary" id="refresh-products" type="button">Refresh</button>
+        </div>
+      </section>
+
+      <div class="layout">
+        <section>
+          <div class="product-grid" id="products"></div>
+        </section>
+
+        <aside class="cart" aria-labelledby="cart-title">
+          <h2 id="cart-title">Cart</h2>
+          <div id="cart-list" class="cart-list"></div>
+          <div class="cart-total">
+            <span>Total</span>
+            <span id="cart-total">$0.00</span>
+          </div>
+          <div class="cart-buttons">
+            <button class="secondary" id="clear-cart" type="button">Clear</button>
+            <button class="primary" id="place-order" type="button">Place Order</button>
+          </div>
+        </aside>
+      </div>
+
+      <section class="orders" aria-labelledby="orders-title">
+        <div class="orders-head">
+          <h2 id="orders-title">Recent Orders</h2>
+          <div class="toolbar-actions">
+            <select id="order-status">
+              <option value="">All statuses</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+            </select>
+            <button class="secondary" id="refresh-orders" type="button">Refresh</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="orders"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <template id="product-art-template">
+      <svg viewBox="0 0 96 96" role="img" aria-label="Product">
+        <rect x="18" y="22" width="60" height="50" rx="8" fill="#ffffff" stroke="#1f8a70" stroke-width="4"></rect>
+        <path d="M30 34h36M30 46h26M30 58h18" stroke="#f0b940" stroke-width="5" stroke-linecap="round"></path>
+      </svg>
+    </template>
+
+    <script>
+      const state = {
+        apiBase: localStorage.getItem("apiBase") || "/api",
+        products: [],
+        cart: JSON.parse(localStorage.getItem("cart") || "[]"),
+      };
+
+      const els = {
+        apiForm: document.querySelector("#api-form"),
+        apiBase: document.querySelector("#api-base"),
+        status: document.querySelector("#status"),
+        products: document.querySelector("#products"),
+        search: document.querySelector("#search"),
+        refreshProducts: document.querySelector("#refresh-products"),
+        cartList: document.querySelector("#cart-list"),
+        cartTotal: document.querySelector("#cart-total"),
+        clearCart: document.querySelector("#clear-cart"),
+        placeOrder: document.querySelector("#place-order"),
+        orderStatus: document.querySelector("#order-status"),
+        refreshOrders: document.querySelector("#refresh-orders"),
+        orders: document.querySelector("#orders"),
+        productArtTemplate: document.querySelector("#product-art-template"),
+      };
+
+      els.apiBase.value = state.apiBase;
+
+      function money(value) {
+        return Number(value || 0).toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+        });
+      }
+
+      function setStatus(message, type = "info") {
+        els.status.textContent = message;
+        els.status.className = `status show ${type}`;
+      }
+
+      function clearStatus() {
+        els.status.textContent = "";
+        els.status.className = "status";
+      }
+
+      function endpoint(path) {
+        return `${state.apiBase.replace(/\/$/, "")}${path}`;
+      }
+
+      async function request(path, options = {}) {
+        const res = await fetch(endpoint(path), {
+          headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+          ...options,
+        });
+        const text = await res.text();
+        const data = text ? JSON.parse(text) : null;
+        if (!res.ok) {
+          throw new Error((data && data.error) || `Request failed with ${res.status}`);
+        }
+        return data;
+      }
+
+      function saveCart() {
+        localStorage.setItem("cart", JSON.stringify(state.cart));
+      }
+
+      function renderProducts() {
+        const query = els.search.value.trim().toLowerCase();
+        const products = state.products.filter((product) =>
+          String(product.name).toLowerCase().includes(query)
+        );
+
+        if (!products.length) {
+          els.products.innerHTML = '<div class="empty">No products found.</div>';
+          return;
+        }
+
+        els.products.innerHTML = "";
+        products.forEach((product) => {
+          const card = document.createElement("article");
+          card.className = "product-card";
+          const art = els.productArtTemplate.content.cloneNode(true);
+          const artWrap = document.createElement("div");
+          artWrap.className = "product-art";
+          artWrap.appendChild(art);
+
+          card.innerHTML = `
+            <div class="product-body">
+              <h3 class="product-name"></h3>
+              <div class="price"></div>
+              <div class="product-meta">
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+            <div class="product-actions">
+              <input class="quantity-input" type="number" min="1" value="1" aria-label="Quantity" />
+              <button class="primary" type="button"></button>
+            </div>
+          `;
+
+          card.prepend(artWrap);
+          card.querySelector(".product-name").textContent = product.name;
+          card.querySelector(".price").textContent = money(product.price);
+          card.querySelector(".product-meta span:first-child").textContent = `ID ${product.id}`;
+          card.querySelector(".product-meta span:last-child").textContent = `${product.stock} in stock`;
+
+          const input = card.querySelector(".quantity-input");
+          const button = card.querySelector("button");
+          button.textContent = product.stock > 0 ? "Add to Cart" : "Out of Stock";
+          button.disabled = product.stock <= 0;
+          input.max = product.stock;
+
+          button.addEventListener("click", () => {
+            const quantity = Math.max(1, Number(input.value || 1));
+            addToCart(product, quantity);
+          });
+
+          els.products.appendChild(card);
+        });
+      }
+
+      function renderCart() {
+        if (!state.cart.length) {
+          els.cartList.innerHTML = '<div class="empty">Cart is empty.</div>';
+          els.placeOrder.disabled = true;
+        } else {
+          els.cartList.innerHTML = "";
+          state.cart.forEach((item) => {
+            const row = document.createElement("div");
+            row.className = "cart-item";
+            row.innerHTML = `
+              <div>
+                <strong></strong>
+                <span class="muted"></span>
+              </div>
+              <button class="danger" type="button">Remove</button>
+            `;
+            row.querySelector("strong").textContent = item.name;
+            row.querySelector(".muted").textContent = `${item.quantity} x ${money(item.price)}`;
+            row.querySelector("button").addEventListener("click", () => removeFromCart(item.id));
+            els.cartList.appendChild(row);
+          });
+          els.placeOrder.disabled = false;
+        }
+
+        const total = state.cart.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+        els.cartTotal.textContent = money(total);
+      }
+
+      function addToCart(product, quantity) {
+        const existing = state.cart.find((item) => item.id === product.id);
+        if (existing) {
+          existing.quantity += quantity;
+        } else {
+          state.cart.push({
+            id: product.id,
+            name: product.name,
+            price: Number(product.price),
+            quantity,
+          });
+        }
+        saveCart();
+        renderCart();
+        setStatus(`${product.name} added to cart.`, "ok");
+      }
+
+      function removeFromCart(productId) {
+        state.cart = state.cart.filter((item) => item.id !== productId);
+        saveCart();
+        renderCart();
+      }
+
+      async function loadProducts() {
+        setStatus("Loading products...", "info");
+        state.products = await request("/products");
+        renderProducts();
+        clearStatus();
+      }
+
+      async function loadOrders() {
+        const status = els.orderStatus.value;
+        const path = status ? `/orders?status=${encodeURIComponent(status)}` : "/orders";
+        const orders = await request(path);
+
+        if (!orders.length) {
+          els.orders.innerHTML = '<tr><td colspan="6"><div class="empty">No orders found.</div></td></tr>';
+          return;
+        }
+
+        els.orders.innerHTML = "";
+        orders.forEach((order) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td></td>
+            <td><span class="order-product"></span><span class="muted"></span></td>
+            <td></td>
+            <td></td>
+            <td><span class="pill"></span></td>
+            <td></td>
+          `;
+          row.children[0].textContent = order.id;
+          row.querySelector(".order-product").textContent = order.product_name || `Product ${order.product_id}`;
+          row.querySelector(".muted").textContent = order.unit_price ? `${money(order.unit_price)} each` : "";
+          row.children[2].textContent = order.quantity;
+          row.children[3].textContent = money(order.total);
+          row.querySelector(".pill").textContent = order.status || "pending";
+          row.children[5].textContent = order.created_at ? new Date(order.created_at).toLocaleString() : "";
+          els.orders.appendChild(row);
+        });
+      }
+
+      async function placeOrder() {
+        if (!state.cart.length) return;
+        els.placeOrder.disabled = true;
+        setStatus("Placing order...", "info");
+
+        try {
+          for (const item of state.cart) {
+            await request("/products/order", {
+              method: "POST",
+              body: JSON.stringify({ productId: item.id, quantity: item.quantity }),
+            });
+          }
+          state.cart = [];
+          saveCart();
+          renderCart();
+          await loadProducts();
+          await loadOrders();
+          setStatus("Order placed successfully.", "ok");
+        } catch (error) {
+          setStatus(error.message, "error");
+        } finally {
+          els.placeOrder.disabled = state.cart.length === 0;
+        }
+      }
+
+      els.apiForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        state.apiBase = els.apiBase.value.trim() || "/api";
+        localStorage.setItem("apiBase", state.apiBase);
+        try {
+          await loadProducts();
+          await loadOrders();
+          setStatus("Connected.", "ok");
+        } catch (error) {
+          setStatus(error.message, "error");
+        }
+      });
+
+      els.search.addEventListener("input", renderProducts);
+      els.refreshProducts.addEventListener("click", () => loadProducts().catch((error) => setStatus(error.message, "error")));
+      els.refreshOrders.addEventListener("click", () => loadOrders().catch((error) => setStatus(error.message, "error")));
+      els.orderStatus.addEventListener("change", () => loadOrders().catch((error) => setStatus(error.message, "error")));
+      els.clearCart.addEventListener("click", () => {
+        state.cart = [];
+        saveCart();
+        renderCart();
+      });
+      els.placeOrder.addEventListener("click", placeOrder);
+
+      renderCart();
+      Promise.all([loadProducts(), loadOrders()]).catch((error) => setStatus(error.message, "error"));
+    </script>
+  </body>
+</html>
