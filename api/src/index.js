@@ -3,6 +3,7 @@ const cors = require('cors');
 const { pool, initDB } = require('./db');
 const productRoutes = require('./routes/products');
 const orderRoutes = require('./routes/orders');
+const cartRoutes = require('./routes/cart');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,6 +28,7 @@ app.get('/health/db', async (req, res) => {
 // Routes
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/cart', cartRoutes);
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
@@ -42,9 +44,11 @@ async function start() {
   });
 }
 
-start().catch(err => {
-  console.error('Failed to start server:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  start().catch(err => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  });
+}
 
 module.exports = app;

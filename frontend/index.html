@@ -488,7 +488,7 @@
       const state = {
         apiBase: normalizeApiBase(localStorage.getItem("apiBase") || "/api"),
         products: [],
-        cart: JSON.parse(localStorage.getItem("cart") || "[]"),
+        cart: [],
       };
 
       const els = {
@@ -558,8 +558,14 @@
         return data;
       }
 
-      function saveCart() {
-        localStorage.setItem("cart", JSON.stringify(state.cart));
+      function applyCart(cart) {
+        state.cart = (cart.items || []).map((item) => ({
+          id: item.productId,
+          name: item.name,
+          price: Number(item.price),
+          quantity: Number(item.quantity),
+        }));
+        renderCart(Number(cart.total || 0));
       }
 
       function renderProducts() {
@@ -618,7 +624,7 @@
         });
       }
 
-      function renderCart() {
+      function renderCart(cartTotal) {
         if (!state.cart.length) {
           els.cartList.innerHTML = '<div class="empty">Cart is empty.</div>';
           els.placeOrder.disabled = true;
@@ -642,31 +648,32 @@
           els.placeOrder.disabled = false;
         }
 
-        const total = state.cart.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+        const total = cartTotal ?? state.cart.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
         els.cartTotal.textContent = money(total);
       }
 
-      function addToCart(product, quantity) {
-        const existing = state.cart.find((item) => item.id === product.id);
-        if (existing) {
-          existing.quantity += quantity;
-        } else {
-          state.cart.push({
-            id: product.id,
-            name: product.name,
-            price: Number(product.price),
-            quantity,
+      async function addToCart(product, quantity) {
+        try {
+          const cart = await request("/cart/items", {
+            method: "POST",
+            body: JSON.stringify({ productId: product.id, quantity }),
           });
+          applyCart(cart);
+          setStatus(`${product.name} added to cart.`, "ok");
+        } catch (error) {
+          setStatus(error.message, "error");
         }
-        saveCart();
-        renderCart();
-        setStatus(`${product.name} added to cart.`, "ok");
       }
 
-      function removeFromCart(productId) {
-        state.cart = state.cart.filter((item) => item.id !== productId);
-        saveCart();
-        renderCart();
+      async function removeFromCart(productId) {
+        try {
+          const cart = await request(`/cart/items/${encodeURIComponent(productId)}`, {
+            method: "DELETE",
+          });
+          applyCart(cart);
+        } catch (error) {
+          setStatus(error.message, "error");
+        }
       }
 
       async function loadProducts() {
@@ -708,21 +715,19 @@
         });
       }
 
+      async function loadCart() {
+        const cart = await request("/cart");
+        applyCart(cart);
+      }
+
       async function placeOrder() {
         if (!state.cart.length) return;
         els.placeOrder.disabled = true;
         setStatus("Placing order...", "info");
 
         try {
-          for (const item of state.cart) {
-            await request("/products/order", {
-              method: "POST",
-              body: JSON.stringify({ productId: item.id, quantity: item.quantity }),
-            });
-          }
-          state.cart = [];
-          saveCart();
-          renderCart();
+          await request("/cart/checkout", { method: "POST" });
+          await loadCart();
           await loadProducts();
           await loadOrders();
           setStatus("Order placed successfully.", "ok");
@@ -740,6 +745,7 @@
         localStorage.setItem("apiBase", state.apiBase);
         try {
           await loadProducts();
+          await loadCart();
           await loadOrders();
           setStatus("Connected.", "ok");
         } catch (error) {
@@ -751,15 +757,18 @@
       els.refreshProducts.addEventListener("click", () => loadProducts().catch((error) => setStatus(error.message, "error")));
       els.refreshOrders.addEventListener("click", () => loadOrders().catch((error) => setStatus(error.message, "error")));
       els.orderStatus.addEventListener("change", () => loadOrders().catch((error) => setStatus(error.message, "error")));
-      els.clearCart.addEventListener("click", () => {
-        state.cart = [];
-        saveCart();
-        renderCart();
+      els.clearCart.addEventListener("click", async () => {
+        try {
+          const cart = await request("/cart", { method: "DELETE" });
+          applyCart(cart);
+        } catch (error) {
+          setStatus(error.message, "error");
+        }
       });
       els.placeOrder.addEventListener("click", placeOrder);
 
       renderCart();
-      Promise.all([loadProducts(), loadOrders()]).catch((error) => setStatus(error.message, "error"));
+      Promise.all([loadProducts(), loadCart(), loadOrders()]).catch((error) => setStatus(error.message, "error"));
     </script>
   </body>
 </html>

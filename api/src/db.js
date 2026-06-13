@@ -42,6 +42,27 @@ async function initDB() {
       )
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS carts (
+        id         SERIAL PRIMARY KEY,
+        cart_key   VARCHAR(255) NOT NULL UNIQUE,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS cart_items (
+        id         SERIAL PRIMARY KEY,
+        cart_id    INTEGER NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
+        product_id INTEGER NOT NULL REFERENCES products(id),
+        quantity   INTEGER NOT NULL CHECK (quantity > 0),
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE (cart_id, product_id)
+      )
+    `);
+
     // Seed products if table is empty
     const { rows } = await client.query('SELECT COUNT(*) FROM products');
     if (parseInt(rows[0].count) === 0) {
