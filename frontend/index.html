@@ -528,11 +528,15 @@
       }
 
       function normalizeApiBase(value) {
-        const trimmed = String(value || "").trim();
-        if (!trimmed || trimmed === "/" || trimmed === "/products" || trimmed === "/orders") {
+        let trimmed = String(value || "").trim();
+        if (trimmed && !trimmed.startsWith("/") && !/^https?:\/\//i.test(trimmed)) {
+          trimmed = `/${trimmed}`;
+        }
+        if (!trimmed || trimmed === "/" || trimmed === "/products" || trimmed === "/orders" || trimmed === "/cart") {
           return "/api";
         }
-        return trimmed.replace(/\/(products|orders|products\/order)\/?$/, "/api");
+        return trimmed.replace(/\/api\/(products|orders|cart|products\/order)\/?$/, "/api")
+          .replace(/\/(products|orders|cart|products\/order)\/?$/, "/api");
       }
 
       function endpoint(path) {
