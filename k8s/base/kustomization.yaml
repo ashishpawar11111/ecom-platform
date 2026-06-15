@@ -1,0 +1,9 @@
+resources:
+  - namespace.yaml
+  - api-deployment.yaml
+  - frontend-deployment.yaml
+  - postgres-statefulset.yaml
+  - services.yaml
+  - network-policy.yaml
+  - hpa.yaml
+  - pdb.yaml

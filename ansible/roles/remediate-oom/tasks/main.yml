@@ -1,0 +1,4 @@
+- name: Restart ecommerce services after OOM alert
+  ansible.builtin.service:
+    name: ecom-api
+    state: restarted

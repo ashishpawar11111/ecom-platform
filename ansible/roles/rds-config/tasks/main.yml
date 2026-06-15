@@ -1,0 +1,5 @@
+- name: Render RDS application environment
+  ansible.builtin.template:
+    src: env.j2
+    dest: /etc/ecom-api.env
+    mode: "0600"

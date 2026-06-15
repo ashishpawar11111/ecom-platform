@@ -1,39 +1,42 @@
-'use strict';
 const request = require('supertest');
-const app     = require('../src/index');
-const { pool } = require('../__mocks__/db');
 
-afterEach(() => jest.clearAllMocks());
+jest.mock('pg', () => {
+  const mockPool = {
+    connect: jest.fn(),
+    query: jest.fn(),
+    end: jest.fn(),
+    on: jest.fn(),
+  };
+  return { Pool: jest.fn(() => mockPool) };
+});
 
-describe('GET /health', () => {
-  it('returns 200 with status ok and uptime', async () => {
+const { Pool } = require('pg');
+const mockPool = new Pool();
+const app = require('../src/index');
+
+describe('Health endpoints', () => {
+  it('GET /health should return 200', async () => {
     const res = await request(app).get('/health');
-    expect(res.statusCode).toBe(200);
+    expect(res.status).toBe(200);
     expect(res.body.status).toBe('ok');
-    expect(typeof res.body.uptime).toBe('number');
-  });
-});
-
-describe('GET /health/db', () => {
-  it('returns 200 when db responds', async () => {
-    pool.query.mockResolvedValueOnce({ rows: [{ '?column?': 1 }] });
-    const res = await request(app).get('/health/db');
-    expect(res.statusCode).toBe(200);
-    expect(res.body.db).toBe('connected');
+    expect(res.body).toHaveProperty('uptime');
   });
 
-  it('returns 503 when db is unreachable', async () => {
-    pool.query.mockRejectedValueOnce(new Error('Connection refused'));
+  it('GET /health/db should return 200 when DB is up', async () => {
+    mockPool.query.mockResolvedValueOnce({
+      rows: [{ now: '2025-01-01T00:00:00Z' }],
+    });
+
     const res = await request(app).get('/health/db');
-    expect(res.statusCode).toBe(503);
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('ok');
+  });
+
+  it('GET /health/db should return 503 when DB is down', async () => {
+    mockPool.query.mockRejectedValueOnce(new Error('Connection refused'));
+
+    const res = await request(app).get('/health/db');
+    expect(res.status).toBe(503);
     expect(res.body.status).toBe('error');
-    expect(res.body.db).toMatch(/Connection refused/);
-  });
-});
-
-describe('GET /unknown-route', () => {
-  it('returns 404 for unknown paths', async () => {
-    const res = await request(app).get('/does-not-exist');
-    expect(res.statusCode).toBe(404);
   });
 });

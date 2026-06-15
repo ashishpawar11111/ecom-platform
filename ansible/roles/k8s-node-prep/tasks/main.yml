@@ -1,0 +1,4 @@
+- name: Load br_netfilter
+  community.general.modprobe:
+    name: br_netfilter
+    state: present

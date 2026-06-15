@@ -1,0 +1,3 @@
+- name: Create AWX project placeholder
+  ansible.builtin.debug:
+    msg: "Wire AWX/Tower job templates and RBAC here."
