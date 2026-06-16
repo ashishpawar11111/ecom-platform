@@ -42,7 +42,7 @@ jobs:
 
       - name: Unit tests + coverage gate
         working-directory: api
-        run: npm test -- --coverage --coverageReporters=text
+        run: npm test -- --coverage --coverageReporters=text --detectOpenHandles
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4

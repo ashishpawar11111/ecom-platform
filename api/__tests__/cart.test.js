@@ -64,6 +64,44 @@ describe('Cart routes', () => {
     expect(cartService.checkout).toHaveBeenCalledWith(undefined);
   });
 
+  it('PATCH /api/cart/items/:productId updates an item', async () => {
+    cartService.updateItem.mockResolvedValueOnce(sampleCart);
+
+    const res = await request(app)
+      .patch('/api/cart/items/1')
+      .send({ quantity: 3 });
+
+    expect(res.statusCode).toBe(200);
+    expect(cartService.updateItem).toHaveBeenCalledWith({
+      cartId: undefined,
+      productId: '1',
+      quantity: 3,
+    });
+  });
+
+  it('DELETE /api/cart/items/:productId removes an item', async () => {
+    cartService.removeItem.mockResolvedValueOnce({ ...sampleCart, items: [], total: 0 });
+
+    const res = await request(app).delete('/api/cart/items/1');
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.items).toEqual([]);
+    expect(cartService.removeItem).toHaveBeenCalledWith({
+      cartId: undefined,
+      productId: '1',
+    });
+  });
+
+  it('DELETE /api/cart clears the cart', async () => {
+    cartService.clearCart.mockResolvedValueOnce({ ...sampleCart, items: [], total: 0 });
+
+    const res = await request(app).delete('/api/cart');
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.items).toEqual([]);
+    expect(cartService.clearCart).toHaveBeenCalledWith(undefined);
+  });
+
   it('returns service errors with their status code', async () => {
     const err = new Error('Insufficient stock');
     err.statusCode = 409;
@@ -76,5 +114,15 @@ describe('Cart routes', () => {
 
     expect(res.statusCode).toBe(409);
     expect(res.body).toEqual({ error: 'Insufficient stock', available: 1 });
+  });
+
+  it('returns 500 for unexpected service errors', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    cartService.checkout.mockRejectedValueOnce(new Error('unexpected'));
+
+    const res = await request(app).post('/api/cart/checkout');
+
+    expect(res.statusCode).toBe(500);
+    expect(res.body.error).toBe('Internal server error');
   });
 });

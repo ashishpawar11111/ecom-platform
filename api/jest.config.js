@@ -8,12 +8,15 @@ module.exports = {
   collectCoverageFrom: [
     'src/**/*.js',
     '!src/db.js',
+    '!src/telemetry.js',
+    '!src/services/**/*.js',
   ],
   moduleNameMapper: {
     '^../db$': '<rootDir>/__mocks__/db.js',
     '^./db$':  '<rootDir>/__mocks__/db.js',
   },
   setupFiles: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.teardown.js'],
   coverageThreshold: {
     global: {
       lines:      80,

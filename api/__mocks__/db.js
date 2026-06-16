@@ -14,7 +14,9 @@ const mockClient = {
 const pool = {
   query:   jest.fn(),
   connect: jest.fn().mockResolvedValue(mockClient),
+  end:     jest.fn().mockResolvedValue(undefined),
   on:      jest.fn(),
+  removeAllListeners: jest.fn(),
 };
 
 module.exports = { pool, mockClient, mockRelease };

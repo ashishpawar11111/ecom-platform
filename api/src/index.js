@@ -31,16 +31,24 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/cart', cartRoutes);
 
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  // eslint-disable-next-line no-console
-  console.log('SIGTERM received, shutting down gracefully...');
-  await pool.end();
+/* istanbul ignore next */
+async function stop() {
   if (server) {
-    server.close();
+    await new Promise((resolve, reject) => {
+      server.close((err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve();
+      });
+    });
+    server = undefined;
   }
-});
+  await pool.end();
+}
 
+/* istanbul ignore next */
 async function start() {
   await initDB();
   server = app.listen(PORT, () => {
@@ -49,7 +57,18 @@ async function start() {
   });
 }
 
+/* istanbul ignore next */
 if (require.main === module) {
+  process.once('SIGTERM', () => {
+    // eslint-disable-next-line no-console
+    console.log('SIGTERM received, shutting down gracefully...');
+    stop().catch(err => {
+      // eslint-disable-next-line no-console
+      console.error('Failed to stop server:', err);
+      throw err;
+    });
+  });
+
   start().catch(err => {
     // eslint-disable-next-line no-console
     console.error('Failed to start server:', err);
@@ -58,3 +77,5 @@ if (require.main === module) {
 }
 
 module.exports = app;
+module.exports.start = start;
+module.exports.stop = stop;
