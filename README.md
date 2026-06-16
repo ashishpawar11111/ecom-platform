@@ -11,4 +11,4 @@ Built progressively across a 7-month DevOps learning spine project.
 | 3 | Ansible | 14–17 |
 | 4 | Kubernetes, Helm, ArgoCD | 18–24 |
 | 5 | Splunk, OpenTelemetry | 25–28 |
-| 6 |
+| 6 | 
