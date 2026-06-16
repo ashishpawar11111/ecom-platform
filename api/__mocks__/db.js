@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Manual mock for src/db.js.
+ * Manual mock for src/db.js
  * Jest swaps this in for all tests via jest.config.js moduleNameMapper.
  * Tests run without a real Postgres instance.
  */
