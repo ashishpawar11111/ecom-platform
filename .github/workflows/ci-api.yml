@@ -12,7 +12,7 @@ env:
   REGISTRY:   ghcr.io
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/ecom-api
 
-# ── Job 1: lint + test (matrix across Node 18 and 20) ─────────────────
+# ── Job 1: lint + test (matrix across Node 18 and 20) ──────────────────
 jobs:
   test:
     name: Lint and test (Node ${{ matrix.node }})
@@ -42,7 +42,7 @@ jobs:
 
       - name: Unit tests + coverage gate
         working-directory: api
-        run: npm test -- --coverage --coverageReporters=text --detectOpenHandles
+        run: npm test -- --coverage --coverageReporters=text
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -73,17 +73,15 @@ jobs:
           name: semgrep-report
           path: semgrep-report.json
 
-# ── Job 3: build + push (only on main, after test + sast pass)  ──────────
+## ── Job 3: build + push (only on main, after test + sast pass) ──────────
   build-push:
     name: Build and push image
     needs: [test, sast]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    permissions:
-      contents: read
-      packages: write
     outputs:
       image-tag: sha-${{ github.sha }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -119,13 +117,13 @@ jobs:
           cache-to:   type=gha,mode=max
 
       - name: Trivy — scan for CRITICAL CVEs (hard gate)
-        uses: aquasecurity/trivy-action@v2
+        uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.tags }}
-          severity: CRITICAL
+          image-ref: ${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+          severity:  CRITICAL
           exit-code: "1"
-          format: sarif
-          output: trivy-results.sarif
+          format:    sarif
+          output:    trivy-results.sarif
 
       - name: Upload Trivy SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
