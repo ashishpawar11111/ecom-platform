@@ -12,6 +12,10 @@ env:
   REGISTRY:   ghcr.io
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/ecom-api
 
+permissions:
+  contents: read
+  security-events: write
+
 # ── Job 1: lint + test (matrix across Node 18 and 20) ─────────────────
 jobs:
   test:
@@ -119,14 +123,14 @@ jobs:
       - name: Trivy — scan for CRITICAL CVEs (hard gate)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+          image-ref: ${{ steps.meta.outputs.tags }}
           severity: CRITICAL
           exit-code: "1"
           format: sarif
           output: trivy-results.sarif
 
       - name: Upload Trivy SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: trivy-results.sarif
