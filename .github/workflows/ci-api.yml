@@ -73,7 +73,7 @@ jobs:
           name: semgrep-report
           path: semgrep-report.json
 
-# ── Job 3: build + push (only on main, after test + sast pass + added trivy version) ──────────
+# ── Job 3: build + push (only on main, after test + sast pass) ──────────
   build-push:
     name: Build and push image
     needs: [test, sast]
