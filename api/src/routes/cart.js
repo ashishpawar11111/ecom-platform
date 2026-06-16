@@ -14,6 +14,7 @@ function sendError(res, err) {
     Object.assign(body, err.details);
   }
   if (statusCode === 500) {
+    // eslint-disable-next-line no-console
     console.error('Cart service error:', err);
   }
   res.status(statusCode).json(body);

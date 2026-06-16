@@ -24,6 +24,7 @@ router.get('/', async (req, res) => {
     const { rows } = await pool.query(query, params);
     res.json(rows);
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error('Error fetching orders:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -80,6 +81,7 @@ router.post('/', async (req, res) => {
 
     res.status(201).json(orderResult.rows[0]);
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error('Error creating order:', err);
     res.status(500).json({ error: 'Internal server error' });
   }

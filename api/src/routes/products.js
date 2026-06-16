@@ -10,6 +10,7 @@ router.get('/', async (req, res) => {
     );
     res.json(rows);
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error('Error fetching products:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -69,6 +70,7 @@ router.post('/order', async (req, res) => {
     });
   } catch (err) {
     await client.query('ROLLBACK');
+    // eslint-disable-next-line no-console
     console.error('Order transaction failed:', err);
     res.status(500).json({ error: 'Order failed' });
   } finally {

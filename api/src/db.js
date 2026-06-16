@@ -12,8 +12,9 @@ const pool = new Pool({
 });
 
 pool.on('error', (err) => {
+  // eslint-disable-next-line no-console
   console.error('Unexpected pool error:', err);
-  process.exit(-1);
+  throw err;
 });
 
 async function initDB() {
@@ -77,6 +78,7 @@ async function initDB() {
     }
 
     await client.query('COMMIT');
+    // eslint-disable-next-line no-console
     console.log('Database initialized successfully');
   } catch (err) {
     await client.query('ROLLBACK');

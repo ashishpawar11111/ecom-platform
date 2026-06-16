@@ -7,6 +7,7 @@ const cartRoutes = require('./routes/cart');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+let server;
 
 app.use(cors());
 app.use(express.json());
@@ -32,22 +33,27 @@ app.use('/api/cart', cartRoutes);
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
+  // eslint-disable-next-line no-console
   console.log('SIGTERM received, shutting down gracefully...');
   await pool.end();
-  process.exit(0);
+  if (server) {
+    server.close();
+  }
 });
 
 async function start() {
   await initDB();
-  app.listen(PORT, () => {
+  server = app.listen(PORT, () => {
+    // eslint-disable-next-line no-console
     console.log(`API server running on port ${PORT}`);
   });
 }
 
 if (require.main === module) {
   start().catch(err => {
+    // eslint-disable-next-line no-console
     console.error('Failed to start server:', err);
-    process.exit(1);
+    throw err;
   });
 }
 
