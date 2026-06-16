@@ -51,6 +51,32 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+router.patch('/:id/status', async (req, res) => {
+  const allowedStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+  const { status } = req.body;
+
+  if (!allowedStatuses.includes(status)) {
+    return res.status(400).json({
+      error: `status must be one of: ${allowedStatuses.join(', ')}`,
+    });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      'UPDATE orders SET status = $1 WHERE id = $2 RETURNING *',
+      [status, req.params.id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /api/orders — create order
 router.post('/', async (req, res) => {
   try {
