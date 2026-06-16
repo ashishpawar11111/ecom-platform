@@ -12,7 +12,7 @@ env:
   REGISTRY:   ghcr.io
   IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/ecom-api
 
-# ── Job 1: lint + test (matrix across Node 18 and 20) ──────────────────
+# ── Job 1: lint + test (matrix across Node 18 and 20) ─────────────────
 jobs:
   test:
     name: Lint and test (Node ${{ matrix.node }})
@@ -73,7 +73,7 @@ jobs:
           name: semgrep-report
           path: semgrep-report.json
 
-# ── Job 3: build + push (only on main, after test + sast pass) ──────────
+# ── Job 3: build + push (only on main, after test + sast pass)  ──────────
   build-push:
     name: Build and push image
     needs: [test, sast]
