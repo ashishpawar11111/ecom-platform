@@ -1,19 +1,60 @@
-name: ci-frontend
+name: CI — frontend
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
   pull_request:
+    branches: [main]
     paths:
       - "frontend/**"
 
+permissions:
+  contents: read
+
 jobs:
   build:
+    name: Build and test
     runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm install
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
         working-directory: frontend
-      - run: npm run build
+        run: npm ci
+
+      - name: Lint
         working-directory: frontend
+        run: npm run lint
+        if: always()
+
+      - name: Run tests
+        working-directory: frontend
+        run: npm run test
+        if: always()
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+      - name: Check build size
+        working-directory: frontend
+        run: du -sh dist/
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-build
+          path: frontend/dist/
+          retention-days: 7
