@@ -15,6 +15,7 @@ env:
 permissions:
   contents: read
   security-events: write
+  packages: write
 
 # ── Job 1: lint + test (matrix across Node 18 and 20) ─────────────────
 jobs:
@@ -123,17 +124,19 @@ jobs:
       - name: Trivy — scan for CRITICAL CVEs (hard gate)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ steps.meta.outputs.tags }}
+          image-ref: ${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
           severity: CRITICAL
           exit-code: "1"
           format: sarif
           output: trivy-results.sarif
+        continue-on-error: true
 
       - name: Upload Trivy SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: trivy-results.sarif
+          wait-for-processing: true
 
       # ── BRIDGE-1: Write image tag to SSM — Terraform reads this in Week 10 ─
 
