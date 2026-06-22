@@ -1,0 +1,17 @@
+# monitoring/chaos/pod-kill.yaml
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: random-pod-kill
+  namespace: ecom
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces: ["ecom"]
+    labelSelectors:
+      app: ecom-api
+  scheduler:
+    cron: "@every 30m"
+  duration: "1s"
+  # Measure: RTO = time from kill to readiness probe passing

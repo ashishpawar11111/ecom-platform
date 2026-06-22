@@ -1,0 +1,13 @@
+# k8s/kustomize/base/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base/namespace.yaml
+  - ../../base/api-deployment.yaml
+  - ../../base/frontend-deployment.yaml
+  - ../../base/postgres-statefulset.yaml
+  - ../../base/services.yaml
+  - ../../base/network-policy.yaml
+  - ../../base/hpa.yaml
+  - ../../base/pdb.yaml

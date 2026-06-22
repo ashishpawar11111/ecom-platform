@@ -1,6 +1,25 @@
+# k8s/base/namespace.yaml
 apiVersion: v1
 kind: Namespace
 metadata:
   name: ecom
   labels:
-    pod-security.kubernetes.io/enforce: restricted
+    app.kubernetes.io/part-of: ecom-platform
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: ecom-limits
+  namespace: ecom
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: 500m
+        memory: 256Mi
+      defaultRequest:
+        cpu: 100m
+        memory: 128Mi
+      max:
+        cpu: "2"
+        memory: 1Gi

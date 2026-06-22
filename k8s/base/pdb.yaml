@@ -1,9 +1,22 @@
+# k8s/base/pdb.yaml
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ecom-api
+  name: ecom-api-pdb
+  namespace: ecom
 spec:
   minAvailable: 1
   selector:
     matchLabels:
       app: ecom-api
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ecom-frontend-pdb
+  namespace: ecom
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ecom-frontend

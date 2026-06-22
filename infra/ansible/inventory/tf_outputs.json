@@ -1,0 +1,14 @@
+{
+  "api_private_ips": {
+    "value": ["10.0.1.10", "10.0.1.11"]
+  },
+  "db_endpoint": {
+    "value": "dev-ecom-db.xxxx.us-east-1.rds.amazonaws.com"
+  },
+  "db_port": {
+    "value": 5432
+  },
+  "vpc_id": {
+    "value": "vpc-0abc123def456"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "kpi_definitions": [
+    {
+      "title": "API Error Rate",
+      "entity": "ecom-api",
+      "threshold_type": "adaptive",
+      "calibration_source": "chaos-mesh RTO data (week 24)",
+      "warning_threshold": 0.5,
+      "critical_threshold": 1.0,
+      "unit": "percent"
+    },
+    {
+      "title": "API p99 Latency",
+      "entity": "ecom-api",
+      "threshold_type": "adaptive",
+      "warning_threshold": 300,
+      "critical_threshold": 500,
+      "unit": "milliseconds"
+    },
+    {
+      "title": "Database Connection Saturation",
+      "entity": "ecom-database",
+      "threshold_type": "static",
+      "warning_threshold": 80,
+      "critical_threshold": 95,
+      "unit": "percent"
+    }
+  ]
+}

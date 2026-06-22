@@ -1,11 +1,46 @@
-name: infra-deploy
+# .github/workflows/infra-deploy.yml
+name: Infrastructure Deploy
 
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        type: choice
+        options: [dev, staging, prod]
 
 jobs:
-  deploy:
+  terraform:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo "terraform apply, export outputs, then run ansible"
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Terraform apply
+        working-directory: infra/terraform/envs/${{ inputs.environment }}
+        run: |
+          terragrunt init
+          terragrunt apply -auto-approve
+
+      - name: Export outputs for Ansible
+        working-directory: infra/terraform/envs/${{ inputs.environment }}
+        run: |
+          terragrunt output -json > ../../ansible/inventory/tf_outputs.json
+
+  ansible:
+    needs: terraform
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Ansible playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: infra/ansible/site.yml
+          options: |
+            --limit ${{ inputs.environment }}
+            --extra-vars "target_env=${{ inputs.environment }}"

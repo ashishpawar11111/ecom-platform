@@ -1,0 +1,25 @@
+# vault/auth/k8s-role.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-k8s-auth-config
+  namespace: ecom
+data:
+  role.json: |
+    {
+      "bound_service_account_names": ["ecom-api"],
+      "bound_service_account_namespaces": ["ecom"],
+      "policies": ["ecom-api"],
+      "ttl": "1h",
+      "max_ttl": "24h"
+    }
+---
+# Vault Agent Injector annotations (add to pod spec)
+# vault.hashicorp.com/agent-inject: "true"
+# vault.hashicorp.com/role: "ecom-api"
+# vault.hashicorp.com/agent-inject-secret-db: "secret/data/ecom/db"
+# vault.hashicorp.com/agent-inject-template-db: |
+#   {{- with secret "secret/data/ecom/db" -}}
+#   DB_HOST={{ .Data.data.host }}
+#   DB_PASSWORD={{ .Data.data.password }}
+#   {{- end -}}

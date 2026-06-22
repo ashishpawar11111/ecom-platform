@@ -1,0 +1,15 @@
+# monitoring/chaos/node-failure.yaml
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PhysicalMachineChaos
+metadata:
+  name: node-failure-test
+  namespace: ecom
+spec:
+  action: node-stop
+  mode: one
+  selector:
+    labelSelectors:
+      "node.kubernetes.io/instance-type": "t3.medium"
+  duration: "5m"
+  # Expected: PDB prevents all pods from being evicted
+  # Measure: time to reschedule on healthy node (RTO)

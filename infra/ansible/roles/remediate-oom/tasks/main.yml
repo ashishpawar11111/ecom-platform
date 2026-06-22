@@ -1,0 +1,31 @@
+---
+# roles/remediate-oom/tasks/main.yml — triggered by ITSI alert (week 28)
+- name: Detect OOM-killed pods
+  kubernetes.core.k8s_info:
+    kind: Pod
+    namespace: ecom
+    field_selectors:
+      - status.phase=Failed
+  register: failed_pods
+
+- name: Restart OOM pods
+  kubernetes.core.k8s:
+    state: absent
+    kind: Pod
+    namespace: ecom
+    name: "{{ item.metadata.name }}"
+  loop: "{{ failed_pods.resources }}"
+  when: "'OOMKilled' in (item.status.containerStatuses | map(attribute='state') | map(attribute='terminated') | selectattr('reason','equalto','OOMKilled') | list | string)"
+
+- name: Notify Splunk of remediation
+  uri:
+    url: "{{ splunk_hec_url }}"
+    method: POST
+    headers:
+      Authorization: "Splunk {{ vault_splunk_hec_token }}"
+    body_format: json
+    body:
+      event:
+        action: "oom_remediation"
+        pods_restarted: "{{ failed_pods.resources | length }}"
+        timestamp: "{{ ansible_date_time.iso8601 }}"

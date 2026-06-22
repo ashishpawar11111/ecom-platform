@@ -1,0 +1,26 @@
+<!-- splunk/dashboards/deployment-pipeline.xml -->
+<dashboard version="1.1">
+  <label>Deployment Pipeline — End to End</label>
+
+  <row>
+    <panel>
+      <title>CI → Terraform → ArgoCD → Pod Ready</title>
+      <table>
+        <search>
+          <query>
+            index=ecom_ci OR index=ecom_infra OR index=ecom_k8s
+            | eval stage=case(
+                sourcetype="github_actions", "CI",
+                sourcetype="terraform", "Terraform",
+                sourcetype="argocd", "ArgoCD",
+                sourcetype="k8s_events", "Pod Ready"
+              )
+            | stats earliest(_time) as start, latest(_time) as end by commit_sha, stage
+            | eval duration_s = end - start
+            | xyseries commit_sha stage duration_s
+          </query>
+        </search>
+      </table>
+    </panel>
+  </row>
+</dashboard>

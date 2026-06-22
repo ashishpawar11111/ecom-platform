@@ -1,0 +1,20 @@
+# k8s/helm/ecom-api/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "ecom-api.fullname" . }}-test"
+  labels:
+    {{- include "ecom-api.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: test
+      image: curlimages/curl:latest
+      command: ['curl']
+      args:
+        - '--fail'
+        - '--silent'
+        - '--show-error'
+        - 'http://{{ include "ecom-api.fullname" . }}:{{ .Values.service.port }}/health/db'

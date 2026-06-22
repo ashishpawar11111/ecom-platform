@@ -1,7 +1,12 @@
+# k8s/base/api-deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ecom-api
+  namespace: ecom
+  labels:
+    app: ecom-api
+    tier: backend
 spec:
   replicas: 2
   selector:
@@ -11,15 +16,46 @@ spec:
     metadata:
       labels:
         app: ecom-api
+        tier: backend
     spec:
       securityContext:
         runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
       containers:
         - name: api
-          image: ghcr.io/example/ecom-api:latest
+          image: ghcr.io/your-org/ecom-api:latest
           ports:
             - containerPort: 3000
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: ecom-db-credentials
+                  key: host
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ecom-db-credentials
+                  key: password
+            - name: NODE_ENV
+              value: production
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /healthz
+              path: /health/db
               port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5

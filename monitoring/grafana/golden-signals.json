@@ -1,0 +1,38 @@
+{
+  "dashboard": {
+    "title": "ecom-platform — Golden Signals",
+    "uid": "ecom-golden",
+    "panels": [
+      {
+        "title": "Latency (p50, p95, p99)",
+        "type": "timeseries",
+        "targets": [
+          { "expr": "histogram_quantile(0.5, sum(rate(http_request_duration_seconds_bucket{app=\"ecom-api\"}[5m])) by (le))", "legendFormat": "p50" },
+          { "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{app=\"ecom-api\"}[5m])) by (le))", "legendFormat": "p95" },
+          { "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{app=\"ecom-api\"}[5m])) by (le))", "legendFormat": "p99" }
+        ]
+      },
+      {
+        "title": "Traffic (req/s)",
+        "type": "timeseries",
+        "targets": [
+          { "expr": "sum(rate(http_requests_total{app=\"ecom-api\"}[5m]))", "legendFormat": "requests/s" }
+        ]
+      },
+      {
+        "title": "Error Rate (%)",
+        "type": "gauge",
+        "targets": [
+          { "expr": "(1 - ecom:availability:ratio_rate5m) * 100" }
+        ]
+      },
+      {
+        "title": "Saturation — CPU",
+        "type": "timeseries",
+        "targets": [
+          { "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"ecom\"}[5m])) by (pod)" }
+        ]
+      }
+    ]
+  }
+}

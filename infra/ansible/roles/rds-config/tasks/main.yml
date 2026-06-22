@@ -1,0 +1,36 @@
+---
+# roles/rds-config/tasks/main.yml
+- name: Install PostgreSQL client
+  package:
+    name: postgresql-client
+    state: present
+
+- name: Apply parameter group overrides
+  community.postgresql.postgresql_set:
+    login_host: "{{ db_endpoint }}"
+    login_user: ecom_admin
+    login_password: "{{ vault_db_password }}"
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+  loop:
+    - { key: 'work_mem', value: '64MB' }
+    - { key: 'shared_buffers', value: '256MB' }
+    - { key: 'max_connections', value: '200' }
+
+- name: Create application database user
+  community.postgresql.postgresql_user:
+    login_host: "{{ db_endpoint }}"
+    login_user: ecom_admin
+    login_password: "{{ vault_db_password }}"
+    name: ecom_user
+    password: "{{ vault_app_db_password }}"
+    priv: "CONNECT"
+    db: ecom
+
+- name: Run schema migration
+  community.postgresql.postgresql_query:
+    login_host: "{{ db_endpoint }}"
+    login_user: ecom_admin
+    login_password: "{{ vault_db_password }}"
+    db: ecom
+    path_to_script: "{{ playbook_dir }}/files/migrations/latest.sql"

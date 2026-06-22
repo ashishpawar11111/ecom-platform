@@ -1,4 +1,10 @@
+# k8s/helm/ecom-api/Chart.yaml
 apiVersion: v2
 name: ecom-api
+description: E-commerce API Helm chart
+type: application
 version: 0.1.0
-appVersion: "0.1.0"
+appVersion: "1.0.0"
+maintainers:
+  - name: Platform Team
+    email: platform@example.com

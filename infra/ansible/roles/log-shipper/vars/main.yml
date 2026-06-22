@@ -1,0 +1,9 @@
+---
+# roles/log-shipper/vars/main.yml
+
+# Splunk HTTP Event Collector endpoint
+# stubbed in week 14, populated week 26
+splunk_hec_url: "https://splunk-hec.example.com:8088/services/collector/event"
+splunk_hec_token: "{{ vault_splunk_hec_token }}"
+splunk_index: "ecom_logs"
+splunk_sourcetype: "syslog"

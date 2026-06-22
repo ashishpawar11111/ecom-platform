@@ -1,0 +1,32 @@
+{
+  "title": "ecom-platform Service Tree",
+  "services": [
+    {
+      "title": "ecom-frontend",
+      "type": "web_frontend",
+      "dependencies": ["ecom-api"],
+      "kpis": [
+        { "title": "Availability", "type": "service_health", "threshold": 99.9 },
+        { "title": "Page Load Time", "type": "custom", "search": "index=ecom_rum | stats avg(page_load_ms)" }
+      ]
+    },
+    {
+      "title": "ecom-api",
+      "type": "web_service",
+      "dependencies": ["ecom-database"],
+      "kpis": [
+        { "title": "Error Rate", "type": "custom", "search": "index=ecom_metrics metric_name=http.server.request.duration | stats count(eval(status>=500)) as errors, count as total | eval rate=errors/total" },
+        { "title": "p99 Latency", "type": "custom", "search": "index=ecom_metrics metric_name=http.server.request.duration | stats p99(duration)" },
+        { "title": "Order Success", "type": "custom", "search": "index=ecom_logs | stats count(eval(order_status=confirmed)) as ok, count as total | eval rate=ok/total" }
+      ]
+    },
+    {
+      "title": "ecom-database",
+      "type": "database",
+      "kpis": [
+        { "title": "Connection Pool", "type": "custom", "search": "index=ecom_metrics metric_name=pg.pool.active" },
+        { "title": "Query Latency", "type": "custom", "search": "index=ecom_metrics metric_name=db.query.duration | stats p99(duration)" }
+      ]
+    }
+  ]
+}

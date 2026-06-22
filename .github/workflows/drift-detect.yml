@@ -1,12 +1,44 @@
-name: drift-detect
+# .github/workflows/drift-detect.yml
+name: Terraform Drift Detection
 
 on:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: '0 6 * * *'  # Daily at 6 AM UTC
+  workflow_dispatch:
 
 jobs:
-  plan:
+  detect-drift:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env: [dev, staging, prod]
     steps:
       - uses: actions/checkout@v4
-      - run: echo "terraform plan and send drift findings to Splunk"
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Check for drift
+        id: drift
+        working-directory: infra/terraform/envs/${{ matrix.env }}
+        run: |
+          terragrunt init
+          terragrunt plan -detailed-exitcode -out=plan.tfplan 2>&1 | tee plan.txt
+          echo "exitcode=$?" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Notify Splunk if drift detected
+        if: steps.drift.outputs.exitcode == '2'
+        run: |
+          curl -k "${{ secrets.SPLUNK_HEC_URL }}" \
+            -H "Authorization: Splunk ${{ secrets.SPLUNK_HEC_TOKEN }}" \
+            -d '{
+              "event": {
+                "type": "terraform_drift",
+                "environment": "${{ matrix.env }}",
+                "repository": "${{ github.repository }}",
+                "run_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              },
+              "sourcetype": "github_actions"
+            }'

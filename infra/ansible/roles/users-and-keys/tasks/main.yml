@@ -1,0 +1,26 @@
+---
+# roles/users-and-keys/tasks/main.yml
+- name: Create service users
+  user:
+    name: "{{ item.name }}"
+    groups: "{{ item.groups | default(omit) }}"
+    shell: /bin/bash
+    create_home: true
+  loop: "{{ service_users }}"
+
+- name: Deploy SSH authorized keys
+  authorized_key:
+    user: "{{ item.name }}"
+    key: "{{ item.ssh_key }}"
+    exclusive: true
+  loop: "{{ service_users }}"
+  when: item.ssh_key is defined
+
+- name: Configure sudoers
+  copy:
+    content: "{{ item.name }} ALL=(ALL) NOPASSWD: {{ item.sudo_commands | default('ALL') }}\n"
+    dest: "/etc/sudoers.d/{{ item.name }}"
+    mode: '0440'
+    validate: 'visudo -cf %s'
+  loop: "{{ service_users }}"
+  when: item.sudo | default(false)

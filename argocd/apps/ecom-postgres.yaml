@@ -1,0 +1,20 @@
+# argocd/apps/ecom-postgres.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ecom-postgres
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/your-org/ecom-platform.git
+    targetRevision: main
+    path: k8s/base
+    directory:
+      include: 'postgres-statefulset.yaml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ecom
+  syncPolicy:
+    automated:
+      selfHeal: true

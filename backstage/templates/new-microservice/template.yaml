@@ -1,0 +1,71 @@
+# backstage/templates/new-microservice/template.yaml
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: new-microservice
+  title: New Microservice
+  description: Scaffold a new microservice with CI, Helm, Vault, ArgoCD, and Splunk — in under 5 minutes
+  tags: [recommended, nodejs]
+spec:
+  owner: platform-team
+  type: service
+
+  parameters:
+    - title: Service Details
+      required: [name, owner]
+      properties:
+        name:
+          title: Service Name
+          type: string
+          pattern: "^[a-z][a-z0-9-]*$"
+        owner:
+          title: Owner Team
+          type: string
+          ui:field: OwnerPicker
+        description:
+          title: Description
+          type: string
+
+    - title: Infrastructure
+      properties:
+        database:
+          title: Needs Database?
+          type: boolean
+          default: false
+        port:
+          title: Container Port
+          type: number
+          default: 3000
+
+  steps:
+    - id: fetch
+      name: Fetch skeleton
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          owner: ${{ parameters.owner }}
+          port: ${{ parameters.port }}
+
+    - id: publish
+      name: Create GitHub repo
+      action: publish:github
+      input:
+        repoUrl: github.com?owner=your-org&repo=${{ parameters.name }}
+        defaultBranch: main
+
+    - id: register
+      name: Register in Backstage
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: /catalog-info.yaml
+
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}

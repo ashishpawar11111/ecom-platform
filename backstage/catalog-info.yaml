@@ -1,0 +1,49 @@
+# backstage/catalog-info.yaml
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ecom-api
+  description: E-commerce API service
+  annotations:
+    github.com/project-slug: your-org/ecom-platform
+    argocd/app-name: ecom-api
+    splunk.com/dashboard-url: https://splunk.example.com/app/ecom-sli-dashboard
+  tags:
+    - nodejs
+    - express
+    - postgres
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: ecom-platform
+  dependsOn:
+    - component:ecom-database
+  providesApis:
+    - ecom-api
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ecom-frontend
+  description: E-commerce React SPA
+  tags: [react, vite]
+spec:
+  type: website
+  lifecycle: production
+  owner: platform-team
+  system: ecom-platform
+  dependsOn:
+    - component:ecom-api
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ecom-database
+  description: PostgreSQL database
+  tags: [postgres, rds]
+spec:
+  type: resource
+  lifecycle: production
+  owner: platform-team
+  system: ecom-platform

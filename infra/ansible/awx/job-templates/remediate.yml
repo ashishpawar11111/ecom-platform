@@ -1,0 +1,15 @@
+---
+# awx/job-templates/remediate.yml
+name: Self-heal OOM
+description: Triggered by ITSI adaptive threshold alert
+job_type: run
+project: ecom-platform
+playbook: site.yml
+inventory: ecom-dynamic
+credential: k8s-admin
+limit: api_servers
+tags: remediate-oom
+ask_limit_on_launch: false
+webhook_service: github
+notification_templates_success: [slack-ops]
+notification_templates_error: [pagerduty-oncall]

@@ -1,0 +1,14 @@
+---
+# infra/ansible/site.yml — master playbook
+- name: Apply all roles
+  hosts: all
+  become: true
+  vars_files:
+    - vars/vault-encrypted.yml
+
+  roles:
+    - os-hardening
+    - users-and-keys
+    - rds-config
+    - log-shipper
+    - k8s-node-prep

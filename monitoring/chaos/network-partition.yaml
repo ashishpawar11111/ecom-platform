@@ -1,0 +1,53 @@
+<!-- splunk/dashboards/ecom-sli-dashboard.xml -->
+<dashboard version="1.1">
+  <label>ecom-platform — SLI Dashboard</label>
+  <description>Matches week 8 SLI definitions</description>
+
+  <row>
+    <panel>
+      <title>Availability (SLI 1) — Error Rate</title>
+      <chart>
+        <search>
+          <query>
+            index=ecom_metrics sourcetype=otel_metrics metric_name="http.server.request.duration"
+            | stats count as total, count(eval(status>=500)) as errors by _time span=5m
+            | eval error_rate = errors / total * 100
+            | timechart avg(error_rate) as "Error Rate %"
+          </query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+      </chart>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Latency (SLI 2) — p99 Response Time</title>
+      <chart>
+        <search>
+          <query>
+            index=ecom_metrics sourcetype=otel_metrics metric_name="http.server.request.duration"
+            | timechart p99(duration) as "p99 Latency (ms)"
+          </query>
+        </search>
+      </chart>
+    </panel>
+  </row>
+
+  <row>
+    <panel>
+      <title>Order Success Rate (SLI 3)</title>
+      <single>
+        <search>
+          <query>
+            index=ecom_logs sourcetype=ecom_api "order"
+            | stats count(eval(status="confirmed")) as ok, count as total
+            | eval rate = round(ok / total * 100, 2)
+            | fields rate
+          </query>
+        </search>
+      </single>
+    </panel>
+  </row>
+</dashboard>

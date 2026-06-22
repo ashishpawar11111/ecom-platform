@@ -1,0 +1,10 @@
+---
+# vars/vault-encrypted.yml
+# Encrypted with: ansible-vault encrypt vars/vault-encrypted.yml
+# $ANSIBLE_VAULT;1.1;AES256
+# (contents are encrypted — shown here as plaintext for learning)
+
+vault_db_password: "super-secret-db-password"
+vault_app_db_password: "app-user-password"
+vault_splunk_hec_token: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+vault_github_token: "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"

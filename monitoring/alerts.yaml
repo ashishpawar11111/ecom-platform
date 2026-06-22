@@ -1,0 +1,47 @@
+# monitoring/alerts.yaml — multi-window burn rate alerting
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ecom-sli-alerts
+  namespace: monitoring
+spec:
+  groups:
+    - name: ecom-burn-rate
+      rules:
+        # Fast burn: consuming 30-day budget in 1 hour
+        - alert: EcomHighErrorBurnRate
+          expr: |
+            (
+              1 - ecom:availability:ratio_rate5m > (14.4 * (1 - 0.999))
+              and
+              1 - avg_over_time(ecom:availability:ratio_rate5m[1h]) > (14.4 * (1 - 0.999))
+            )
+          for: 2m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "High error burn rate — fast window"
+            description: "Error rate is consuming the 30-day budget in ~1 hour"
+
+        # Slow burn: consuming 30-day budget in 6 hours
+        - alert: EcomSlowErrorBurnRate
+          expr: |
+            (
+              1 - ecom:availability:ratio_rate5m > (6 * (1 - 0.999))
+              and
+              1 - avg_over_time(ecom:availability:ratio_rate5m[6h]) > (6 * (1 - 0.999))
+            )
+          for: 15m
+          labels:
+            severity: warning
+            team: platform
+
+        # Latency SLO: p99 > 500ms
+        - alert: EcomHighLatency
+          expr: ecom:latency:p99_5m > 0.5
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "p99 latency exceeds 500ms SLO"

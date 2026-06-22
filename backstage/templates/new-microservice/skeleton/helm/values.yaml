@@ -1,0 +1,25 @@
+# helm/values.yaml — defaults from ecom-api chart
+replicaCount: 2
+
+image:
+  repository: ghcr.io/your-org/SERVICE_NAME
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3000
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPU: 60

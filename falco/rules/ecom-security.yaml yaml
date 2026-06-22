@@ -1,0 +1,38 @@
+# falco/rules/ecom-security.yaml
+- rule: Shell spawned in ecom-api container
+  desc: Detect shell execution inside the ecom-api container
+  condition: >
+    spawned_process and
+    container and
+    container.name = "ecom-api" and
+    proc.name in (bash, sh, zsh, dash)
+  output: >
+    Shell spawned in ecom-api (user=%user.name command=%proc.cmdline
+    container_id=%container.id image=%container.image.repository)
+  priority: WARNING
+  tags: [container, shell, ecom]
+
+- rule: Unexpected outbound connection from ecom-api
+  desc: ecom-api should only connect to postgres and OTel collector
+  condition: >
+    outbound and
+    container.name = "ecom-api" and
+    not (fd.sip in ("10.0.0.0/8") and fd.sport in (5432, 4317, 4318))
+  output: >
+    Unexpected outbound connection (command=%proc.cmdline
+    dest=%fd.sip:%fd.sport container=%container.name)
+  priority: NOTICE
+  tags: [container, network, ecom]
+
+- rule: Sensitive file access in ecom namespace
+  desc: Alert on access to /etc/shadow or /etc/passwd
+  condition: >
+    open_read and
+    container and
+    k8s.ns.name = "ecom" and
+    fd.name in (/etc/shadow, /etc/passwd)
+  output: >
+    Sensitive file read (file=%fd.name user=%user.name
+    pod=%k8s.pod.name container=%container.name)
+  priority: WARNING
+  tags: [filesystem, ecom]

@@ -1,0 +1,33 @@
+---
+# roles/k8s-node-prep/tasks/main.yml — prepare nodes for kubeadm
+- name: Install containerd
+  package:
+    name: containerd
+    state: present
+
+- name: Configure containerd
+  template:
+    src: containerd-config.toml.j2
+    dest: /etc/containerd/config.toml
+  notify: Restart containerd
+
+- name: Add Kubernetes repo
+  yum_repository:
+    name: kubernetes
+    description: Kubernetes
+    baseurl: "https://pkgs.k8s.io/core:/stable:/v1.29/rpm/"
+    gpgcheck: true
+    gpgkey: "https://pkgs.k8s.io/core:/stable:/v1.29/rpm/repodata/repomd.xml.key"
+
+- name: Install kubeadm, kubelet, kubectl
+  package:
+    name:
+      - kubeadm-1.29.*
+      - kubelet-1.29.*
+      - kubectl-1.29.*
+    state: present
+
+- name: Enable kubelet
+  service:
+    name: kubelet
+    enabled: true

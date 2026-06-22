@@ -1,0 +1,25 @@
+---
+# roles/log-shipper/tasks/main.yml — rsyslog → Splunk HEC
+- name: Install rsyslog
+  package:
+    name: rsyslog
+    state: present
+
+- name: Configure rsyslog for Splunk HEC
+  template:
+    src: splunk-hec.conf.j2
+    dest: /etc/rsyslog.d/50-splunk.conf
+    mode: '0644'
+  notify: Restart rsyslog
+
+- name: Ensure rsyslog is running
+  service:
+    name: rsyslog
+    state: started
+    enabled: true
+
+  handlers:
+    - name: Restart rsyslog
+      service:
+        name: rsyslog
+        state: restarted

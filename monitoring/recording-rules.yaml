@@ -1,0 +1,33 @@
+# monitoring/recording-rules.yaml
+# Implements sli-definitions.md (week 8) as Prometheus recording rules
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ecom-sli-recording-rules
+  namespace: monitoring
+spec:
+  groups:
+    - name: ecom-sli
+      interval: 30s
+      rules:
+        # SLI 1: Availability — ratio of successful requests
+        - record: ecom:availability:ratio_rate5m
+          expr: |
+            sum(rate(http_requests_total{app="ecom-api",status!~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{app="ecom-api"}[5m]))
+
+        # SLI 2: Latency — p99 response time
+        - record: ecom:latency:p99_5m
+          expr: |
+            histogram_quantile(0.99,
+              sum(rate(http_request_duration_seconds_bucket{app="ecom-api"}[5m]))
+              by (le)
+            )
+
+        # SLI 3: Correctness — order success rate
+        - record: ecom:orders:success_rate_5m
+          expr: |
+            sum(rate(orders_total{status="confirmed"}[5m]))
+            /
+            sum(rate(orders_total[5m]))

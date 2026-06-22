@@ -1,0 +1,47 @@
+# splunk/otel-collector-values.yaml — Helm values for DaemonSet
+mode: daemonset
+
+config:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+  processors:
+    batch:
+      timeout: 5s
+      send_batch_size: 256
+    resourcedetection:
+      detectors: [ec2, eks]
+
+  exporters:
+    splunk_hec:
+      token: "${SPLUNK_HEC_TOKEN}"
+      endpoint: "https://splunk-hec.example.com:8088/services/collector"
+      source: "otel"
+      sourcetype: "otel_metrics"
+      index: "ecom_metrics"
+    splunk_hec/logs:
+      token: "${SPLUNK_HEC_TOKEN}"
+      endpoint: "https://splunk-hec.example.com:8088/services/collector"
+      source: "otel"
+      sourcetype: "otel_logs"
+      index: "ecom_logs"
+
+  service:
+    pipelines:
+      traces:
+        receivers: [otlp]
+        processors: [batch, resourcedetection]
+        exporters: [splunk_hec]
+      metrics:
+        receivers: [otlp]
+        processors: [batch]
+        exporters: [splunk_hec]
+      logs:
+        receivers: [otlp]
+        processors: [batch]
+        exporters: [splunk_hec/logs]

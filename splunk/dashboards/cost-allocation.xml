@@ -1,0 +1,21 @@
+<!-- splunk/dashboards/cost-allocation.xml -->
+<dashboard version="1.1">
+  <label>FinOps — Cost Allocation by Tag</label>
+
+  <row>
+    <panel>
+      <title>Monthly Cost by CostCenter Tag</title>
+      <chart>
+        <search>
+          <query>
+            index=aws_billing sourcetype=aws_cost_explorer
+            | stats sum(cost) as total_cost by cost_center, month
+            | sort month
+          </query>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.stackMode">stacked</option>
+      </chart>
+    </panel>
+  </row>
+</dashboard>

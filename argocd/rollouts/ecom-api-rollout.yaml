@@ -1,0 +1,35 @@
+# argocd/rollouts/ecom-api-rollout.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: ecom-api
+  namespace: ecom
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ecom-api
+  template:
+    metadata:
+      labels:
+        app: ecom-api
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/your-org/ecom-api:latest
+          ports:
+            - containerPort: 3000
+  strategy:
+    canary:
+      steps:
+        - setWeight: 10
+        - pause: { duration: 2m }
+        - analysis:
+            templates:
+              - templateName: ecom-error-rate
+        - setWeight: 50
+        - pause: { duration: 5m }
+        - analysis:
+            templates:
+              - templateName: ecom-error-rate
+        - setWeight: 100

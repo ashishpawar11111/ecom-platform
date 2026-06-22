@@ -1,0 +1,29 @@
+{
+  "dashboard": {
+    "title": "K8s Node Health",
+    "uid": "k8s-nodes",
+    "panels": [
+      {
+        "title": "Node CPU Utilization",
+        "type": "timeseries",
+        "targets": [
+          { "expr": "1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) by (instance)" }
+        ]
+      },
+      {
+        "title": "Node Memory Usage",
+        "type": "timeseries",
+        "targets": [
+          { "expr": "1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)" }
+        ]
+      },
+      {
+        "title": "Disk Usage %",
+        "type": "gauge",
+        "targets": [
+          { "expr": "1 - (node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"})" }
+        ]
+      }
+    ]
+  }
+}

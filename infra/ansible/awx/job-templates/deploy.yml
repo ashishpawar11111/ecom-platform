@@ -1,0 +1,23 @@
+---
+# awx/job-templates/deploy.yml
+name: Deploy ecom-api
+description: Deploy API via ECS update or K8s rollout
+job_type: run
+project: ecom-platform
+playbook: deploy-api.yml
+inventory: ecom-dynamic
+credential: aws-prod
+extra_vars:
+  image_tag: "{{ image_tag }}"
+  target_env: "{{ target_env | default('staging') }}"
+survey_enabled: true
+survey_spec:
+  - variable: image_tag
+    question_name: Image Tag
+    type: text
+    required: true
+  - variable: target_env
+    question_name: Target Environment
+    type: multiplechoice
+    choices: ["dev", "staging", "prod"]
+    default: staging

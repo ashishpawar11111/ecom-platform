@@ -1,0 +1,15 @@
+# k8s/helm/ecom-api/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ecom-api.fullname" . }}
+  labels:
+    {{- include "ecom-api.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "ecom-api.selectorLabels" . | nindent 4 }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
+      protocol: TCP

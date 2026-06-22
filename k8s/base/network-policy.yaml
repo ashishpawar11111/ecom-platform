@@ -1,9 +1,49 @@
+# k8s/base/network-policy.yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: default-deny
+  name: default-deny-all
+  namespace: ecom
 spec:
   podSelector: {}
   policyTypes:
     - Ingress
     - Egress
+---
+# Allow API → Postgres
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-to-postgres
+  namespace: ecom
+spec:
+  podSelector:
+    matchLabels:
+      app: ecom-postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: ecom-api
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+# Allow external → Frontend
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-ingress
+  namespace: ecom
+spec:
+  podSelector:
+    matchLabels:
+      app: ecom-frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 80

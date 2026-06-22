@@ -1,0 +1,21 @@
+# argocd/rollouts/analysis-template.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: ecom-error-rate
+  namespace: ecom
+spec:
+  metrics:
+    - name: error-rate
+      # Matches week 8 SLI: error rate < 1%
+      successCondition: result[0] < 0.01
+      interval: 30s
+      count: 5
+      failureLimit: 2
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            sum(rate(http_requests_total{app="ecom-api",status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{app="ecom-api"}[5m]))
