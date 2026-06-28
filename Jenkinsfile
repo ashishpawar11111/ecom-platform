@@ -9,8 +9,8 @@ pipeline {
     }
 
     environment {
-        REGISTRY   = 'ghcr.io'
-        IMAGE_NAME = "ghcr.io/${env.GITHUB_REPO_OWNER ?: 'your-org'}/ecom-api"
+        REGISTRY = 'ghcr.io'
+        IMAGE_NAME = 'ghcr.io/your-org/ecom-api'
         AWS_REGION = 'eu-west-2'
         DOCKER_BUILDKIT = '1'
     }
@@ -21,36 +21,11 @@ pipeline {
                 cleanWs()
                 checkout scm
                 script {
-                    env.GIT_SHA        = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
-                    env.GIT_SHORT_SHA  = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    env.GIT_SHA = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+                    env.GIT_SHORT_SHA = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                     env.GIT_BRANCH_NAME = env.BRANCH_NAME ?: sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
-                    env.IMAGE_TAG_SHA  = "sha-${env.GIT_SHORT_SHA}"
+                    env.IMAGE_TAG_SHA = "sha-${env.GIT_SHORT_SHA}"
                     env.IMAGE_TAG_BRANCH = env.GIT_BRANCH_NAME.replaceAll('/', '-')
-                }
-            }
-        }
-
-        stage('Path filter') {
-            steps {
-                script {
-                    def changed = sh(
-                        script: '''
-                            set +e
-                            if git rev-parse HEAD~1 >/dev/null 2>&1; then
-                              git diff --name-only HEAD~1 HEAD
-                            else
-                              git ls-files
-                            fi
-                        ''',
-                        returnStdout: true
-                    ).trim().split('\n') as List
-
-                    def apiChanged = changed.any { it.startsWith('api/') }
-
-                    if (!apiChanged) {
-                        currentBuild.result = 'NOT_BUILT'
-                        error('No changes under api/**, stopping pipeline.')
-                    }
                 }
             }
         }
