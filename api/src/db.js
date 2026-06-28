@@ -12,7 +12,7 @@ const pool = new Pool({
 });
 
 pool.on('error', (err) => {
-  // eslint-disable-next-line no-console
+  // eslint-disable-next-line No-console.
   console.error('Unexpected pool error:', err);
   throw err;
 });
