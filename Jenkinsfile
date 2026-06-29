@@ -118,7 +118,13 @@ pipeline {
 
                         stage('Archive coverage') {
                             steps {
-                                archiveArtifacts artifacts: 'ci-node-18/api/coverage/**', allowEmptyArchive: true, fingerprint: true
+                                script {
+                                    if (fileExists('ci-node-18/api/coverage')) {
+                                        archiveArtifacts artifacts: 'ci-node-18/api/coverage/**', fingerprint: true
+                                    } else {
+                                        echo 'No Node 18 coverage directory found to archive.'
+                                    }
+                                }
                             }
                         }
                     }
@@ -184,7 +190,13 @@ pipeline {
 
                         stage('Archive coverage') {
                             steps {
-                                archiveArtifacts artifacts: 'ci-node-20/api/coverage/**', allowEmptyArchive: true, fingerprint: true
+                                script {
+                                    if (fileExists('ci-node-20/api/coverage')) {
+                                        archiveArtifacts artifacts: 'ci-node-20/api/coverage/**', fingerprint: true
+                                    } else {
+                                        echo 'No Node 20 coverage directory found to archive.'
+                                    }
+                                }
                             }
                         }
                     }
