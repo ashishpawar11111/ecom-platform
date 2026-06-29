@@ -52,7 +52,7 @@ pipeline {
             parallel {
                 stage('Lint and test (Node 18)') {
                     tools {
-                        nodejs 'nodejs-18'
+                        nodejs 'node18'
                     }
 
                     stages {
@@ -118,7 +118,7 @@ pipeline {
 
                 stage('Lint and test (Node 20)') {
                     tools {
-                        nodejs 'nodejs-20'
+                        nodejs 'node20'
                     }
 
                     stages {
