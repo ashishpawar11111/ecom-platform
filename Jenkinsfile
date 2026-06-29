@@ -8,6 +8,14 @@ pipeline {
         skipDefaultCheckout(true)
     }
 
+    parameters {
+        booleanParam(
+            name: 'RUN_IMAGE_RELEASE_STAGES',
+            defaultValue: true,
+            description: 'Run build/push, Trivy scan, and SSM tag update even when this is not a main branch push.'
+        )
+    }
+
     environment {
         REGISTRY = 'ghcr.io'
         AWS_REGION = 'eu-west-2'
@@ -209,12 +217,15 @@ pipeline {
         }
 
         stage('Build and push image') {
-            /*when {
+            when {
                 allOf {
-                    branch 'main'
                     expression { return env.CHANGE_ID == null }
+                    anyOf {
+                        branch 'main'
+                        expression { return params.RUN_IMAGE_RELEASE_STAGES }
+                    }
                 }
-            }*/
+            }
             steps {
                 withCredentials([
                     usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GHCR_USERNAME', passwordVariable: 'GHCR_PAT')
@@ -245,8 +256,11 @@ pipeline {
         stage('Trivy scan') {
             when {
                 allOf {
-                    branch 'main'
                     expression { return env.CHANGE_ID == null }
+                    anyOf {
+                        branch 'main'
+                        expression { return params.RUN_IMAGE_RELEASE_STAGES }
+                    }
                 }
             }
             steps {
@@ -274,8 +288,11 @@ pipeline {
         stage('Write image tag to SSM') {
             when {
                 allOf {
-                    branch 'main'
                     expression { return env.CHANGE_ID == null }
+                    anyOf {
+                        branch 'main'
+                        expression { return params.RUN_IMAGE_RELEASE_STAGES }
+                    }
                 }
             }
             steps {
