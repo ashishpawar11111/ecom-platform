@@ -247,19 +247,36 @@ pipeline {
 
                         echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
-                        docker buildx create --use --name ecom-multiarch-builder || docker buildx use ecom-multiarch-builder
-                        docker buildx inspect --bootstrap
+                        if docker buildx version >/dev/null 2>&1; then
+                          docker buildx create --use --name ecom-multiarch-builder || docker buildx use ecom-multiarch-builder
+                          docker buildx inspect --bootstrap
 
-                        docker buildx build \
-                          --platform linux/amd64,linux/arm64 \
-                          --tag "${IMAGE_NAME}:${IMAGE_TAG_SHA}" \
-                          --tag "${IMAGE_NAME}:${IMAGE_TAG_FULL_SHA}" \
-                          --tag "${IMAGE_NAME}:${IMAGE_TAG_BRANCH}" \
-                          --label "org.opencontainers.image.revision=${GIT_SHA}" \
-                          --label "org.opencontainers.image.source=${GIT_REMOTE_URL}" \
-                          --file api/Dockerfile \
-                          --push \
-                          api
+                          docker buildx build \
+                            --platform linux/amd64,linux/arm64 \
+                            --tag "${IMAGE_NAME}:${IMAGE_TAG_SHA}" \
+                            --tag "${IMAGE_NAME}:${IMAGE_TAG_FULL_SHA}" \
+                            --tag "${IMAGE_NAME}:${IMAGE_TAG_BRANCH}" \
+                            --label "org.opencontainers.image.revision=${GIT_SHA}" \
+                            --label "org.opencontainers.image.source=${GIT_REMOTE_URL}" \
+                            --file api/Dockerfile \
+                            --push \
+                            api
+                        else
+                          echo 'Docker Buildx is not installed. Falling back to single-architecture docker build/push.'
+
+                          docker build \
+                            --tag "${IMAGE_NAME}:${IMAGE_TAG_SHA}" \
+                            --tag "${IMAGE_NAME}:${IMAGE_TAG_FULL_SHA}" \
+                            --tag "${IMAGE_NAME}:${IMAGE_TAG_BRANCH}" \
+                            --label "org.opencontainers.image.revision=${GIT_SHA}" \
+                            --label "org.opencontainers.image.source=${GIT_REMOTE_URL}" \
+                            --file api/Dockerfile \
+                            api
+
+                          docker push "${IMAGE_NAME}:${IMAGE_TAG_SHA}"
+                          docker push "${IMAGE_NAME}:${IMAGE_TAG_FULL_SHA}"
+                          docker push "${IMAGE_NAME}:${IMAGE_TAG_BRANCH}"
+                        fi
                     '''
                 }
             }
