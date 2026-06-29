@@ -209,12 +209,12 @@ pipeline {
         }
 
         stage('Build and push image') {
-            when {
+            /*when {
                 allOf {
                     branch 'main'
                     expression { return env.CHANGE_ID == null }
                 }
-            }
+            }*/
             steps {
                 withCredentials([
                     usernamePassword(credentialsId: 'ghcr-creds', usernameVariable: 'GHCR_USERNAME', passwordVariable: 'GHCR_PAT')
