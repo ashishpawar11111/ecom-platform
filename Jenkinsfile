@@ -10,7 +10,6 @@ pipeline {
 
     environment {
         REGISTRY = 'ghcr.io'
-        IMAGE_NAME = 'ghcr.io/your-org/ecom-api'
         AWS_REGION = 'eu-west-2'
         DOCKER_BUILDKIT = '1'
     }
@@ -24,98 +23,187 @@ pipeline {
                     env.GIT_SHA = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
                     env.GIT_SHORT_SHA = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
                     env.GIT_BRANCH_NAME = env.BRANCH_NAME ?: sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+                    env.GIT_REMOTE_URL = sh(script: 'git config --get remote.origin.url', returnStdout: true).trim()
+                    env.REPOSITORY_OWNER = sh(script: '''
+                        set -eu
+                        url="$(git config --get remote.origin.url)"
+                        url="${url%.git}"
+                        case "$url" in
+                          git@github.com:*) repo="${url#git@github.com:}" ;;
+                          https://github.com/*) repo="${url#https://github.com/}" ;;
+                          http://github.com/*) repo="${url#http://github.com/}" ;;
+                          *) repo="" ;;
+                        esac
+                        printf '%s' "${repo%%/*}"
+                    ''', returnStdout: true).trim()
+                    if (!env.REPOSITORY_OWNER) {
+                        error 'Unable to derive GitHub repository owner from origin URL for GHCR image name.'
+                    }
+                    env.IMAGE_NAME = "${env.REGISTRY}/${env.REPOSITORY_OWNER}/ecom-api"
                     env.IMAGE_TAG_SHA = "sha-${env.GIT_SHORT_SHA}"
+                    env.IMAGE_TAG_FULL_SHA = "sha-${env.GIT_SHA}"
                     env.IMAGE_TAG_BRANCH = env.GIT_BRANCH_NAME.replaceAll('/', '-')
                 }
+                stash name: 'source', includes: '**/*', excludes: '**/node_modules/**,**/.git/**,**/coverage/**'
             }
         }
 
-        stage('Lint and test matrix') {
-            matrix {
-                axes {
-                    axis {
-                        name 'NODE_VERSION'
-                        values '18', '20'
+        stage('Quality gates') {
+            parallel {
+                stage('Lint and test (Node 18)') {
+                    tools {
+                        nodejs 'nodejs-18'
+                    }
+
+                    stages {
+                        stage('Prepare workspace') {
+                            steps {
+                                dir('ci-node-18') {
+                                    deleteDir()
+                                    unstash 'source'
+                                }
+                            }
+                        }
+
+                        stage('Use Node 18') {
+                            steps {
+                                sh '''
+                                    set -eux
+                                    node --version
+                                    npm --version
+                                '''
+                            }
+                        }
+
+                        stage('Install dependencies') {
+                            steps {
+                                dir('ci-node-18/api') {
+                                    sh '''
+                                        set -eux
+                                        npm ci
+                                    '''
+                                }
+                            }
+                        }
+
+                        stage('Lint') {
+                            steps {
+                                dir('ci-node-18/api') {
+                                    sh '''
+                                        set -eux
+                                        npm run lint
+                                    '''
+                                }
+                            }
+                        }
+
+                        stage('Unit tests + coverage gate') {
+                            steps {
+                                dir('ci-node-18/api') {
+                                    sh '''
+                                        set -eux
+                                        npm test -- --coverage --coverageReporters=text
+                                    '''
+                                }
+                            }
+                        }
+
+                        stage('Archive coverage') {
+                            steps {
+                                archiveArtifacts artifacts: 'ci-node-18/api/coverage/**', allowEmptyArchive: true, fingerprint: true
+                            }
+                        }
                     }
                 }
 
-                stages {
-                    stage('Use Node') {
-                        steps {
-                            script {
-                                env.NODEJS_HOME = tool name: "nodejs-${NODE_VERSION}", type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'
-                                env.PATH = "${env.NODEJS_HOME}/bin:${env.PATH}"
-                            }
-                            sh '''
-                                set -eux
-                                node --version
-                                npm --version
-                            '''
-                        }
+                stage('Lint and test (Node 20)') {
+                    tools {
+                        nodejs 'nodejs-20'
                     }
 
-                    stage('Install dependencies') {
-                        steps {
-                            dir('api') {
+                    stages {
+                        stage('Prepare workspace') {
+                            steps {
+                                dir('ci-node-20') {
+                                    deleteDir()
+                                    unstash 'source'
+                                }
+                            }
+                        }
+
+                        stage('Use Node 20') {
+                            steps {
                                 sh '''
                                     set -eux
-                                    npm ci
+                                    node --version
+                                    npm --version
                                 '''
                             }
                         }
-                    }
 
-                    stage('Lint') {
-                        steps {
-                            dir('api') {
-                                sh '''
-                                    set -eux
-                                    npm run lint
-                                '''
+                        stage('Install dependencies') {
+                            steps {
+                                dir('ci-node-20/api') {
+                                    sh '''
+                                        set -eux
+                                        npm ci
+                                    '''
+                                }
                             }
                         }
-                    }
 
-                    stage('Unit tests + coverage gate') {
-                        steps {
-                            dir('api') {
-                                sh '''
-                                    set -eux
-                                    npm test -- --coverage --coverageReporters=text
-                                '''
+                        stage('Lint') {
+                            steps {
+                                dir('ci-node-20/api') {
+                                    sh '''
+                                        set -eux
+                                        npm run lint
+                                    '''
+                                }
                             }
                         }
-                    }
 
-                    stage('Archive coverage') {
-                        steps {
-                            archiveArtifacts artifacts: 'api/coverage/**', allowEmptyArchive: true, fingerprint: true
+                        stage('Unit tests + coverage gate') {
+                            steps {
+                                dir('ci-node-20/api') {
+                                    sh '''
+                                        set -eux
+                                        npm test -- --coverage --coverageReporters=text
+                                    '''
+                                }
+                            }
+                        }
+
+                        stage('Archive coverage') {
+                            steps {
+                                archiveArtifacts artifacts: 'ci-node-20/api/coverage/**', allowEmptyArchive: true, fingerprint: true
+                            }
                         }
                     }
                 }
-            }
-        }
 
-        stage('SAST - Semgrep') {
-            steps {
-                sh '''
-                    set -eux
-                    docker run --rm \
-                      -v "$PWD:/src" \
-                      -w /src \
-                      returntocorp/semgrep \
-                      semgrep \
-                        --config=p/nodejs \
-                        --config=p/secrets \
-                        --config=p/owasp-top-ten \
-                        --error \
-                        --json-output=semgrep-report.json \
-                        api/src/
-                '''
-            }
-            post {
-                always {
-                    archiveArtifacts artifacts: 'semgrep-report.json', allowEmptyArchive: true, fingerprint: true
+                stage('SAST - Semgrep') {
+                    steps {
+                        sh '''
+                            set -eux
+                            docker run --rm \
+                              -v "$PWD:/src" \
+                              -w /src \
+                              returntocorp/semgrep \
+                              semgrep \
+                                --config=p/nodejs \
+                                --config=p/secrets \
+                                --config=p/owasp-top-ten \
+                                --error \
+                                --json-output=semgrep-report.json \
+                                api/src/
+                        '''
+                    }
+                    post {
+                        always {
+                            archiveArtifacts artifacts: 'semgrep-report.json', allowEmptyArchive: true, fingerprint: true
+                        }
+                    }
                 }
             }
         }
@@ -142,7 +230,10 @@ pipeline {
                         docker buildx build \
                           --platform linux/amd64,linux/arm64 \
                           --tag "${IMAGE_NAME}:${IMAGE_TAG_SHA}" \
+                          --tag "${IMAGE_NAME}:${IMAGE_TAG_FULL_SHA}" \
                           --tag "${IMAGE_NAME}:${IMAGE_TAG_BRANCH}" \
+                          --label "org.opencontainers.image.revision=${GIT_SHA}" \
+                          --label "org.opencontainers.image.source=${GIT_REMOTE_URL}" \
                           --file api/Dockerfile \
                           --push \
                           api
@@ -200,7 +291,7 @@ pipeline {
 
                         aws ssm put-parameter \
                           --name /ecom/image-tag \
-                          --value "${IMAGE_TAG_SHA}" \
+                          --value "${IMAGE_TAG_FULL_SHA}" \
                           --type String \
                           --overwrite
                     '''
