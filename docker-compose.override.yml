@@ -1,26 +1,9 @@
-# docker-compose.override.yml — dev overrides (auto-loaded)
-version: '3.8'
-services:
-  api:
-    build:
-      context: ./api
-      target: builder        # stop at build stage for dev
-    command: npx nodemon src/index.js
-    volumes:
-      - ./api/src:/app/src   # hot-reload on save
-    ports:
-      - "9229:9229"          # Node.js debug port
-    environment:
-      NODE_ENV: development
-  frontend:
-    build:
-      context: ./frontend
-      target: builder
-    command: npm run dev -- --host 0.0.0.0
-    volumes:
-      - ./frontend/src:/app/src
-    ports:
-      - "5173:5173"          # Vite dev server
-  postgres:
-    ports:
-      - "5432:5432"          # expose for local psql
+# Intentionally empty.
+#
+# Docker Compose auto-loads docker-compose.override.yml. Keep this file as a
+# no-op so `docker compose up` runs the production-like stack from
+# docker-compose.yml.
+#
+# For Vite/dev mode, run:
+# docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+services: {}
