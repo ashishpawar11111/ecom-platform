@@ -6,4 +6,6 @@
 #
 # For Vite/dev mode, run:
 # docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+version: '3.9'
+
 services: {}
