@@ -20,12 +20,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://ecom:changeme@postgres:5432/ecommdb 
-      - DB_HOST: postgres
-      - DB_PORT: 5432
-      - DB_NAME: ecomdb
-      - DB_USER: ecom
-      - DB_PASSWORD: changeme
-      - NODE_ENV: production
+      DATABASE_URL=postgresql://ecom:changeme@postgres:5432/ecomdb 
+      NODE_ENV: production
     depends_on:
-      - postgres
+      postgres
