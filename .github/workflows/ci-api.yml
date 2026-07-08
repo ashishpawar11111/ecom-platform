@@ -140,6 +140,57 @@ jobs:
         with:
           sarif_file: trivy-results.sarif
           wait-for-processing: true
+# ── Job 4: Deploy to Staging EC2 ──────────
+
+  deploy-staging:
+    name: Deploy to staging EC2
+    needs: [build-push]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: staging      # enables GitHub environment protection rules
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd ecom-platform
+
+            PREV_TAG=$(cat .deployed_tag 2>/dev/null || echo "")
+            export IMAGE_TAG="${{ needs.build-push.outputs.image-tag }}"
+            export GITHUB_REPOSITORY_OWNER="${{ github.repository_owner }}"
+
+            # Pull images
+            docker compose pull
+
+            # Deploy
+            docker compose up -d
+
+            # Health check with retry
+            sleep 15
+            for i in {1..6}; do
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/health)
+              if [ "$STATUS" = "200" ]; then
+                echo "$IMAGE_TAG" > .deployed_tag
+                echo "Deploy successful: $IMAGE_TAG"
+                exit 0
+              fi
+              echo "Attempt $i: got $STATUS"
+              sleep 5
+            done
+
+            # Rollback
+            echo "Health check failed. Rolling back to $PREV_TAG"
+            export IMAGE_TAG="$PREV_TAG"
+            docker compose pull
+            docker compose up -d
+            exit 1
+
+
 
       # ── BRIDGE-1: Write image tag to SSM — Terraform reads this in Week 10 ─
 

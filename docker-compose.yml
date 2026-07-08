@@ -14,7 +14,7 @@ services:
       retries: 5
       start_period: 10s
   api:
-    build: ./api
+    image: ghcr.io/ashishpawar11111/ecom-api:head
     ports:
       - "3000:3000"
     env_file: .env
