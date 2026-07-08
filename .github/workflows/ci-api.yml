@@ -83,12 +83,10 @@ jobs:
     name: Build and push image
     needs: [test, sast]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/test' && github.event_name == 'push'
     permissions:
       contents: read
       packages: write
-    outputs:
-      image-tag: sha-${{ github.sha }}
 
     steps:
       - uses: actions/checkout@v4
@@ -146,7 +144,7 @@ jobs:
     name: Deploy to staging EC2
     needs: [build-push]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/test' && github.event_name == 'push'
     environment: staging      # enables GitHub environment protection rules
 
     steps:
