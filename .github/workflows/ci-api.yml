@@ -3,10 +3,8 @@ name: CI — ecom-api
 on:
   push:
     branches: [test]
-    paths:    ["api/**"]
   pull_request:
     branches: [test]
-    paths:    ["api/**"]
 
 env:
   REGISTRY:   ghcr.io
