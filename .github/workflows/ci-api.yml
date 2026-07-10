@@ -87,7 +87,9 @@ jobs:
       packages: write
       security-events: write
       actions: read
-
+    outputs:
+      image-tag: sha-${{ github.sha }}
+      
     steps:
       - uses: actions/checkout@v4
 
