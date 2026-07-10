@@ -8,7 +8,7 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 COPY src/ ./src/
 
-## ── Stage 2: Runtime Test comment──
+## ── Stage 2: Runtime Test Comments──
 FROM node:20-alpine
 
 RUN apk --no-cache add curl \
