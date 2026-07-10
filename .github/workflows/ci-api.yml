@@ -145,7 +145,7 @@ jobs:
     needs: [build-push]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/test' && github.event_name == 'push'
-    environment: staging      # enables GitHub environment protection rules
+    environment: staging      # Enable GitHub environment protection rules
 
     steps:
       - name: Deploy via SSH
