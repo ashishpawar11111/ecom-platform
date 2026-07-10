@@ -148,8 +148,8 @@ jobs:
     name: Deploy to staging EC2
     needs: [build-push]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/test' && github.event_name == 'push'
-    environment: staging      # Enables GitHub environment protection rules
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment: development      # Enables GitHub environment protection rules
 
     steps:
       - name: Deploy via SSH
